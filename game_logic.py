@@ -188,6 +188,10 @@ class AlignQuattroGame:
         """Returns self.outcome"""
         return self.outcome
 
+    def get_board(self) -> list[list[Piece]]:
+        """Returns self._board."""
+        return self._board
+
     def get_row_from_available_columns(self, input_col: int) -> int:
         """Returns the lowest row for the given column, or self._valid_moves[input_col]"""
         return self._valid_moves[input_col]
@@ -306,7 +310,7 @@ def run_game(red: Player, yellow: Player) -> tuple[str, list[tuple[str, int, int
     move_sequence = []
     current_player = red
     while game.get_outcome() == "in progress":
-
+        print_simple_visual(game.get_board())
         col_input = current_player.make_move(game)
         row_input = game.get_row_from_available_columns(col_input)
         game.make_move(col_input)
@@ -317,7 +321,24 @@ def run_game(red: Player, yellow: Player) -> tuple[str, list[tuple[str, int, int
             current_player = red
             player_str = "yellow"
         move_sequence.append((player_str, row_input, col_input))
+        # can pass row_input, col_input to pygame here
     return game.get_outcome(), move_sequence
+
+
+def print_simple_visual(board: list[list[Piece]]) -> None:
+    """Prints out a visualization of a board, with Os Rs and Ys for empty, red, and yellow."""
+    visual = "ALIGNQUATTRO BOARD: \n"
+    for r in range(0, 6):
+        for c in range(0, 7):
+            if board[r][c].get_piece_type() == "empty":
+                piece = "O "
+            elif board[r][c].get_piece_type() == "red":
+                piece = "R "
+            else:
+                piece = "Y "
+            visual += piece
+        visual += "\n"
+    print(visual)
 
 
 if __name__ == '__main__':
