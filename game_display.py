@@ -1,6 +1,6 @@
-
 import game_logic
 import pygame
+
 
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
@@ -52,3 +52,17 @@ while running:
     clock.tick(60)  # limits FPS to 60
 
 pygame.quit()
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
+
+    # import python_ta
+    # python_ta.check_all(config={
+    #     'max-line-length': 120,
+    #     'disable': ['static_type_checker'],
+    #     'extra-imports': []
+    # })
+
+
+
