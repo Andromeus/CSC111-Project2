@@ -74,7 +74,7 @@ class AlignQuattroGame:
         self.check_win(row, col)
         self._is_red_move = not self._is_red_move
 
-    def check_win(self, r, c) -> None:
+    def check_win(self, r: int, c: int) -> None:
         """Checks for a win or a tie based on where a piece was placed. Assumes the piece was the last piece to
         be placed, and all pieces are up to date. Changes self.outcome to 'red win' 'yellow win' or 'tie', or
         leaves it as in progress if no wins or ties are found.
@@ -91,98 +91,80 @@ class AlignQuattroGame:
             - 0 <= r <= 5
             - 0 <= c <= 6
         """
-        aligned_so_far = 1
-        i = 1
         if self._is_red_move:
             player = 'red'
             win = 'red win'
         else:
             player = 'yellow'
             win = 'yellow win'
-        # check vertical (only checks down, not up, nothing can be placed on top of the last played piece)
-        while i < 4 and r + i < 6:
-            if self._board[r + i][c].get_piece_type() == player:
-                aligned_so_far += 1
-                i += 1
-            else:
-                i = 4
 
-        if aligned_so_far >= 4:
+        vertical = self.check_direction_win(r, c, "vertical", player)
+        horizontal = self.check_direction_win(r, c, "horizontal", player)
+        pos_diag = self.check_direction_win(r, c, "positive diagonal", player)
+        neg_diag = self.check_direction_win(r, c, "negative diagonal", player)
+
+        if any([vertical, horizontal, pos_diag, neg_diag]):
             self.outcome = win
             return
-        else:
-            aligned_so_far = 1
-            i = 1
-
-        # check horizontal
-        while i < 4 and c + i < 7:
-            if self._board[r][c + i].get_piece_type() == player:
-                aligned_so_far += 1
-                i += 1
-            else:
-                i = 4
-        i = 1
-        while i < 4 and c + i > -1:
-            if self._board[r][c - i].get_piece_type() == player:
-                aligned_so_far += 1
-                i += 1
-            else:
-                i = 4
-
-        if aligned_so_far >= 4:
-            self.outcome = win
-            return
-        else:
-            aligned_so_far = 1
-            i = 1
-
-        # check positive diagonal
-        while i < 4 and c + i < 7 and r + i < 6:
-            if self._board[r + i][c + i].get_piece_type() == player:
-                aligned_so_far += 1
-                i += 1
-            else:
-                i = 4
-        i = 1
-        while i < 4 and c - i > -1 and r - i > -1:
-            if self._board[r - i][c - i].get_piece_type() == player:
-                aligned_so_far += 1
-                i += 1
-            else:
-                i = 4
-
-        if aligned_so_far >= 4:
-            self.outcome = win
-            return
-        else:
-            aligned_so_far = 1
-            i = 1
-
-        # check negative diagonal
-        while i < 4 and c + i < 7 and r - i > -1:
-            if self._board[r - i][c + i].get_piece_type() == player:
-                aligned_so_far += 1
-                i += 1
-            else:
-                i = 4
-        i = 1
-        while i < 4 and c - i > -1 and r + i < 6:
-            if self._board[r + i][c - i].get_piece_type() == player:
-                aligned_so_far += 1
-                i += 1
-            else:
-                i = 4
-
-        if aligned_so_far >= 4:
-            self.outcome = win
-            return
-        else:
-            aligned_so_far = 1
-            i = 1
 
         # check for a tie
         if all([self._valid_moves[x] == -1 for x in self._valid_moves]):
             self.outcome = 'tie'
+
+    def check_direction_win(self, r: int, c: int, direction: str, player: str) -> bool:
+        """Checks for horizontal, vertical, positive diagonal, and negative diagonal alignments of 4.
+
+        Returns true if there are four in a row (or line anyway) and false otherwise.
+
+        Preconditions:
+            - 0 <= r <= 5
+            - 0 <= c <= 6
+            - direction in {"horizontal", "vertical", "positive diagonal", "negative diagonal"}
+            - player in {'red', 'yellow'}
+        """
+        i = 1
+        aligned_so_far = 1
+        indices = self.update_row_col_indices(direction, r, c, i)
+        first_row_index, first_col_index = indices[0], indices[1]
+        second_row_index, second_col_index = indices[2], indices[3]
+
+        while i < 4 and -1 < first_row_index < 6 and -1 < first_col_index < 7:
+            if self._board[first_row_index][first_col_index].get_piece_type() == player:
+                aligned_so_far += 1
+                i += 1
+                indices = self.update_row_col_indices(direction, r, c, i)
+                first_row_index, first_col_index = indices[0], indices[1]
+            else:
+                i = 4
+        i = 1
+        while i < 4 and -1 < second_row_index < 6 and -1 < second_col_index < 7:
+            if self._board[second_row_index][second_col_index].get_piece_type() == player:
+                aligned_so_far += 1
+                i += 1
+                indices = self.update_row_col_indices(direction, r, c, i)
+                second_row_index, second_col_index = indices[2], indices[3]
+            else:
+                i = 4
+        return aligned_so_far >= 4
+
+    def update_row_col_indices(self, direction: str, r: int, c: int, i: int) -> tuple[int, int, int, int]:
+        """Helper function for the check_direction_win helper function which returns a tuple representing
+        an update first_row_index, first_col_index, second_row_index, and second_col_index based direction and i
+
+        Preconditions:
+            - 0 <= r <= 5
+            - 0 <= c <= 6
+            - direction in {"horizontal", "vertical", "positive diagonal", "negative diagonal"}
+        """
+        if direction == "horizontal":
+            first_row_index, first_col_index, second_row_index, second_col_index = r, c + i, r, c - i
+        elif direction == "positive diagonal":
+            first_row_index, first_col_index, second_row_index, second_col_index = r + i, c + i, r - i, c - i
+        elif direction == "negative diagonal":
+            first_row_index, first_col_index, second_row_index, second_col_index = r - i, c + i, r + i, c - i
+        else:
+            first_row_index, first_col_index, second_row_index, second_col_index = r + i, c, r - i, c
+        return first_row_index, first_col_index, second_row_index, second_col_index
 
     def get_outcome(self) -> str:
         """Returns self.outcome"""
@@ -216,7 +198,7 @@ class Piece:
     _row_pos: int
     _col_pos: int
 
-    def __init__(self, row_val: int, col_val: int, p_type: str='empty') -> None:
+    def __init__(self, row_val: int, col_val: int, p_type: str = 'empty') -> None:
         """Initializes Piece as empty by default, or else as a specified type, either 'red' or 'yellow'"""
         self._piece_type = p_type
         self._row_pos = row_val
@@ -344,9 +326,11 @@ if __name__ == '__main__':
     import doctest
     doctest.testmod()
 
-    # import python_ta
-    # python_ta.check_all(config={
-    #     'max-line-length': 120,
-    #     'disable': ['static_type_checker'],
-    #     'extra-imports': ['random', 'a2_minichess', 'a2_game_tree']
-    # })
+    import python_ta
+    python_ta.check_all(config={
+        'max-line-length': 120,
+        'disable': ['static_type_checker'],
+        'extra-imports': ['random', 'copy', 'game_display'],
+        'allowed-io': ['run_game', 'run_games', 'print_simple_visual', 'HumanPlayer.make_move']
+
+    })
