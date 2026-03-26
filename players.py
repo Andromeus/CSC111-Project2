@@ -9,7 +9,7 @@ class Player:
     is player based or AI based.
     """
 
-    def make_move(self, game: game_logic.Align_Quattro_game) -> int:
+    def make_move(self, game: game_logic.AlignQuattroGame) -> int:
         """Make a move given the current game.
 
         Preconditions:
@@ -21,7 +21,7 @@ class Player:
 class RandomPlayer(Player):
     """A Align_Quattro AI whose strategy is always picking a random move."""
 
-    def make_move(self, game: game_logic.Align_Quattro_game) -> int:
+    def make_move(self, game: game_logic.AlignQuattroGame) -> int:
         """Make a move given the current game.
 
         Preconditions:
