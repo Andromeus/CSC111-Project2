@@ -24,14 +24,19 @@ class AlignQuattroVisualization:
     clock: pygame.time.Clock()
     running: bool
 
-    def __init__(self) -> None:
-        """Initialize AlignQuattroVisualization class."""
+    def __init__(self, red: any = None, yellow: any = None, start: bool = False) -> None:
+        """Initialize AlignQuattroVisualization class.
+
+        Preconditions:
+            - not start or (red is not None and yellow is not None) (if start is true, red and yellow exist)
+        """
         pygame.init()
         self.screen = pygame.display.set_mode((1280, 720))
         self.clock = pygame.time.Clock()
         self.running = True
         self.draw_board()
-        # self.run_game()  # This breaks the other loop, but not having it breaks pygame...?
+        if start:
+            self.run_game(red, yellow)
 
     def draw_board(self) -> None:
         """Draws an empty board"""
@@ -62,37 +67,38 @@ class AlignQuattroVisualization:
         pygame.draw.circle(self.screen, color, (center_x, center_y), circle_radius)
         pygame.display.flip()
 
-    def run_game(self) -> None:
+    def run_game(self, red: any, yellow: any) -> None:
         """Runs the pygame while loop to run the game"""
+        game = game_logic.AlignQuattroGame()
+        move_sequence = []
+        current_player = red
+        player_str = "red"
+        row_input, col_input = -1, -1
         while self.running:
             # poll for events
             # pygame.QUIT event means the user clicked X to close your window
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
-
-            # assuming move is a position in the board(row, column) as well as a color
-            # get move in some way
-            # move = row, column, color in some way
-
-            # draw a new circle representing moved piece over the old circle representing empty piece
-
-            # making transparent background rectangle surface
-            # circle_surface = pygame.Surface((circle_radius * 2, circle_radius * 2), pygame.SRCALPHA) #
-            # pygame.SRCALPHA makes it transparent
-
-            # drawing the circle on the background surface
-            # center_x = (column + 1) * (65 + 55) + 55 * column
-            # center_y = (row + 1) * (10 + 55) + 55 * row
-            # pygame.draw.circle(circle_surface, color, (center_x, center_y), circle_radius)
-
-            # getting rectangle with circle to be replaced in it based on where move was made
-            # rect_left = 65 * (column + 1) + 110 * column
-            # rect_top = 10 * (row + 1) + 110 * row
-            # replaced_rect = circle_surface.get_rect(rect_left, rect_top, circle_radius * 2, circle_radius * 2)
-            # screen.blit(circle_surface, replaced_rect)
-
-            # flip() the display to put your work on screen
+                    self.running = False
+                if game.get_outcome() == "in progress":
+                    col_input = current_player.make_move(game)
+                    row_input = game.get_row_from_available_columns(col_input)
+                    game.make_move(col_input)
+                    self.draw_circle(row_input, col_input, player_str == "red")
+                    move_sequence.append((player_str, row_input, col_input))
+                    if current_player is red:
+                        current_player = yellow
+                        player_str = "yellow"
+                    else:
+                        current_player = red
+                        player_str = "red"
+                else:
+                    # EXTREMELY MESSY PROTOTYPE CODE TO TEST IF THIS WORKS, WILL CLEAN LATER
+                    font = pygame.font.Font('freesansbold.ttf', 32)
+                    text = font.render(game.get_outcome(), True, (255, 0, 0), (255, 255, 0))
+                    text_rect = text.get_rect()
+                    text_rect.center = (1280 // 2, 720 // 2)
+                    self.screen.blit(text, text_rect)
             pygame.display.flip()
 
             self.clock.tick(60)  # limits FPS to 60
