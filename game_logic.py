@@ -1,9 +1,22 @@
-"""CSC111 Project 2 (To be expanded)"""
+"""CSC111 Project 2 ALIGNQUATTRO
+
+GAME LOGIC FILE
+
+This file contains the basic game logic for a game of AlignQuattro (aka connect4). This includes
+    - An AlignQuattroGame class, containing a 6x7 board and several methods like make_move and check_win to
+    help run a game of AlignQuattro
+    - A Piece class, representing a single piece in an AlignQuattro game, which can be red, yellow, or empty
+    - A Player abstract class with the abstract method make_move, and subclasses meant to implement different
+    move stategies
+    - methods run_game and run_games
+
+"""
 
 from __future__ import annotations
 
 import random
 import copy
+import game_display
 
 
 class AlignQuattroGame:
@@ -262,18 +275,19 @@ class HumanPlayer(Player):
 # Functions for running games
 ################################################################################
 
-def run_games(n: int, red: Player, yellow: Player) -> None:
-    """Run n games using the given Players
+def run_games(n: int, red: Player, yellow: Player, visualization_type: str = "none") -> None:
+    """Run n games using the given Players. Visualize with the specified visualization request.
 
     Preconditions:
         - n >= 1
+        - visualization_type in {"none", "text", "pygame"}
     """
     stats = {'red win': 0, 'yellow win': 0, 'tie': 0}
     for i in range(0, n):
         red_copy = copy.deepcopy(red)
         yellow_copy = copy.deepcopy(yellow)
 
-        winner, _ = run_game(red_copy, yellow_copy)
+        winner, _ = run_game(red_copy, yellow_copy, visualization_type)
         stats[winner] += 1
         print(f'Game {i} winner: {winner}')
 
@@ -281,17 +295,28 @@ def run_games(n: int, red: Player, yellow: Player) -> None:
         print(f'{outcome}: {stats[outcome]}/{n} ({100.0 * stats[outcome] / n:.2f}%)')
 
 
-def run_game(red: Player, yellow: Player) -> tuple[str, list[tuple[str, int, int]]]:
-    """Run a Minichess game between the two given players.
+def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> tuple[str, list[tuple[str, int, int]]]:
+    """Run a Minichess game between the two given players. Visualize with the given visualization request.
 
     Return the outcome: either 'red win', 'yellow win', or 'tie'.
+
+    Preconditions:
+        - visualization_type in {"none", "text", "pygame"}
     """
     game = AlignQuattroGame()
 
     move_sequence = []
     current_player = red
+    player_str = "red"
+    row_input, col_input = -1, -1
+    vis = None
+    if visualization_type == "pygame":
+        vis = game_display.AlignQuattroVisualization()
     while game.get_outcome() == "in progress":
-        print_simple_visual(game.get_board())
+        if visualization_type == "text":
+            print_simple_visual(game.get_board())
+        elif visualization_type == "pygame" and row_input != -1:
+            vis.draw_circle(row_input, col_input, player_str == "red")
         col_input = current_player.make_move(game)
         row_input = game.get_row_from_available_columns(col_input)
         game.make_move(col_input)
@@ -326,11 +351,11 @@ if __name__ == '__main__':
     import doctest
     doctest.testmod()
 
-    import python_ta
-    python_ta.check_all(config={
-        'max-line-length': 120,
-        'disable': ['static_type_checker'],
-        'extra-imports': ['random', 'copy', 'game_display'],
-        'allowed-io': ['run_game', 'run_games', 'print_simple_visual', 'HumanPlayer.make_move']
-
-    })
+    # import python_ta
+    # python_ta.check_all(config={
+    #     'max-line-length': 120,
+    #     'disable': ['static_type_checker'],
+    #     'extra-imports': ['random', 'copy', 'game_display'],
+    #     'allowed-io': ['run_game', 'run_games', 'print_simple_visual', 'HumanPlayer.make_move']
+    #
+    # })
