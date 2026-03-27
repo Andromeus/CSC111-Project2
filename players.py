@@ -30,3 +30,7 @@ class RandomPlayer(Player):
         random_move = random.randint(0, 6)
         return random_move
 
+class HumanPlayer(Player):
+
+    def make_move(self, ):
+

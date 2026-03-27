@@ -4,10 +4,11 @@ GAME DISPLAY FILE
 
 This file is for running pygame and visualizing our project.
 """
+import math
 
 import game_logic
 import pygame
-
+from game_logic import Player
 
 class AlignQuattroVisualization:
     """A class for representing an AlignQuattro game with pygame
@@ -20,11 +21,13 @@ class AlignQuattroVisualization:
     Representation Invariants:
         -
     """
-    screen: pygame.display
-    clock: pygame.time.Clock()
+    screen: pygame.Surface
+    clock: pygame.time.Clock
     running: bool
+    red: game_logic.Player
+    yellow: game_logic.Player
 
-    def __init__(self, red: game_logic.Player = None, yellow: any = None, start: bool = False) -> None:
+    def __init__(self, red: game_logic.Player, yellow: game_logic.Player) -> None:
         """Initialize AlignQuattroVisualization class.
 
         Preconditions:
@@ -35,8 +38,8 @@ class AlignQuattroVisualization:
         self.clock = pygame.time.Clock()
         self.running = True
         self.draw_board()
-        if start:
-            self.run_game(red, yellow)
+        self.red = red
+        self.yellow = yellow
 
     def draw_board(self) -> None:
         """Draws an empty board"""
@@ -67,46 +70,63 @@ class AlignQuattroVisualization:
         pygame.draw.circle(self.screen, color, (center_x, center_y), circle_radius)
         pygame.display.flip()
 
-    def run_game(self, red: any, yellow: any) -> None:
+    def run_game(self) -> None:
         """Runs the pygame while loop to run the game"""
         game = game_logic.AlignQuattroGame()
         move_sequence = []
-        current_player = red
+        current_player = self.red
         player_str = "red"
         row_input, col_input = -1, -1
+
+        game_over = pygame.USEREVENT + 1
+
         while self.running:
-            # poll for events
+            # Wait for an event to occur
+            # event = pygame.event.wait()
             # pygame.QUIT event means the user clicked X to close your window
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                if game.get_outcome() == "in progress":
-                    col_input = current_player.make_move(game)
-                    row_input = game.get_row_from_available_columns(col_input)
-                    game.make_move(col_input)
-                    self.draw_circle(row_input, col_input, player_str == "red")
-                    move_sequence.append((player_str, row_input, col_input))
-                    if current_player is red:
-                        current_player = yellow
-                        player_str = "yellow"
-                    else:
-                        current_player = red
-                        player_str = "red"
-                else:
+                elif event.type == game_over:
                     # EXTREMELY MESSY PROTOTYPE CODE TO TEST IF THIS WORKS, WILL CLEAN LATER
                     font = pygame.font.Font('freesansbold.ttf', 32)
                     text = font.render(game.get_outcome(), True, (255, 0, 0), (255, 255, 0))
                     text_rect = text.get_rect()
                     text_rect.center = (1280 // 2, 720 // 2)
                     self.screen.blit(text, text_rect)
-            pygame.display.flip()
 
+            if game.get_outcome() != "in progress":
+                pygame.event.post(pygame.event.Event(game_over))
+
+            # check to see if the player is a human or ai
+
+            # if ai, don't wait for input
+            if not isinstance(current_player, game_logic.HumanPlayer):
+                col_input = current_player.make_move(game)
+                current_player, player_str = self.make_move(game, current_player, current_player, player_str, col_input)
+            else:
+                # if human, wait for player to press a key
+                player_event = pygame.event.wait()
+                if player_event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = player_event.pos
+                    col_input = math.ceil(x/207)
+                    current_player, player_str = self.make_move(game, current_player, current_player, player_str, col_input)
+            pygame.display.flip()
             self.clock.tick(60)  # limits FPS to 60
 
-        pygame.quit()
+    pygame.quit()
 
-
-
+    def make_move(self, game: game_logic.AlignQuattroGame, current_player: game_logic.Player, player_str: str, col_input: int) -> tuple:
+        row_input = game.get_row_from_available_columns(col_input)
+        game.make_move(col_input)
+        self.draw_circle(row_input, col_input, player_str == "red")
+        if current_player is self.red:
+            current_player = self.yellow
+            player_str = "yellow"
+        else:
+            current_player = self.red
+            player_str = "red"
+        return current_player, player_str
 
 # pygame.init()
 # screen = pygame.display.set_mode((1280, 720))

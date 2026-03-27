@@ -315,8 +315,6 @@ def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> t
     while game.get_outcome() == "in progress":
         if visualization_type == "text":
             print_simple_visual(game.get_board())
-        elif visualization_type == "pygame" and row_input != -1:
-            vis.draw_circle(row_input, col_input, player_str == "red")
         col_input = current_player.make_move(game)
         row_input = game.get_row_from_available_columns(col_input)
         game.make_move(col_input)
@@ -330,6 +328,8 @@ def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> t
         # can pass row_input, col_input to pygame here
     return game.get_outcome(), move_sequence
 
+def run_game_pygame():
+    # vis.draw_circle(row_input, col_input, player_str == "red")
 
 def print_simple_visual(board: list[list[Piece]]) -> None:
     """Prints out a visualization of a board, with Os Rs and Ys for empty, red, and yellow."""
