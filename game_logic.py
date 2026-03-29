@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import random
 import copy
-import game_display
 
 
 class AlignQuattroGame:
@@ -270,6 +269,10 @@ class HumanPlayer(Player):
             choice = input("\nChoose a column, 1-7: ")
         return int(choice) - 1
 
+class HumanPlayerPygame(Player):
+    def make_move(self, game: AlignQuattroGame) -> int:
+        pass
+
 
 ################################################################################
 # Functions for running games
@@ -294,42 +297,8 @@ def run_games(n: int, red: Player, yellow: Player, visualization_type: str = "no
     for outcome in stats:
         print(f'{outcome}: {stats[outcome]}/{n} ({100.0 * stats[outcome] / n:.2f}%)')
 
+#def run_game_pygame():
 
-def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> tuple[str, list[tuple[str, int, int]]]:
-    """Run a Minichess game between the two given players. Visualize with the given visualization request.
-
-    Return the outcome: either 'red win', 'yellow win', or 'tie'.
-
-    Preconditions:
-        - visualization_type in {"none", "text", "pygame"}
-    """
-    game = AlignQuattroGame()
-
-    move_sequence = []
-    current_player = red
-    player_str = "red"
-    row_input, col_input = -1, -1
-    vis = None
-    if visualization_type == "pygame":
-        vis = game_display.AlignQuattroVisualization()
-    while game.get_outcome() == "in progress":
-        if visualization_type == "text":
-            print_simple_visual(game.get_board())
-        col_input = current_player.make_move(game)
-        row_input = game.get_row_from_available_columns(col_input)
-        game.make_move(col_input)
-        if current_player is red:
-            current_player = yellow
-            player_str = "red"
-        else:
-            current_player = red
-            player_str = "yellow"
-        move_sequence.append((player_str, row_input, col_input))
-        # can pass row_input, col_input to pygame here
-    return game.get_outcome(), move_sequence
-
-def run_game_pygame():
-    # vis.draw_circle(row_input, col_input, player_str == "red")
 
 def print_simple_visual(board: list[list[Piece]]) -> None:
     """Prints out a visualization of a board, with Os Rs and Ys for empty, red, and yellow."""

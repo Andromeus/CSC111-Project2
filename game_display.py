@@ -6,9 +6,9 @@ This file is for running pygame and visualizing our project.
 """
 import math
 
-import game_logic
 import pygame
-from game_logic import Player
+import game_logic
+
 
 class AlignQuattroVisualization:
     """A class for representing an AlignQuattro game with pygame
@@ -24,10 +24,8 @@ class AlignQuattroVisualization:
     screen: pygame.Surface
     clock: pygame.time.Clock
     running: bool
-    red: game_logic.Player
-    yellow: game_logic.Player
 
-    def __init__(self, red: game_logic.Player, yellow: game_logic.Player) -> None:
+    def __init__(self, red, yellow) -> None:
         """Initialize AlignQuattroVisualization class.
 
         Preconditions:
@@ -73,48 +71,42 @@ class AlignQuattroVisualization:
     def run_game(self) -> None:
         """Runs the pygame while loop to run the game"""
         game = game_logic.AlignQuattroGame()
-        move_sequence = []
         current_player = self.red
         player_str = "red"
-        row_input, col_input = -1, -1
+        game_over = False
 
-        game_over = pygame.USEREVENT + 1
+        while self.running and game_over == False:
+            # if ai, don't wait for input
+            if not isinstance(current_player, game_logic.HumanPlayerPygame):
+                col_input = current_player.make_move(game)
+                current_player, player_str = self.make_move(game, current_player, player_str, col_input)
 
-        while self.running:
-            # Wait for an event to occur
-            # event = pygame.event.wait()
             # pygame.QUIT event means the user clicked X to close your window
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == game_over:
-                    # EXTREMELY MESSY PROTOTYPE CODE TO TEST IF THIS WORKS, WILL CLEAN LATER
-                    font = pygame.font.Font('freesansbold.ttf', 32)
-                    text = font.render(game.get_outcome(), True, (255, 0, 0), (255, 255, 0))
-                    text_rect = text.get_rect()
-                    text_rect.center = (1280 // 2, 720 // 2)
-                    self.screen.blit(text, text_rect)
+                    # game over screen
+                elif event.type == pygame.MOUSEBUTTONDOWN and isinstance(current_player, game_logic.HumanPlayerPygame):
+                    # if human, wait for player to press a key
+                    # if player clicks screen, then make a move
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        x = event.pos[0]
+                        col_input = math.ceil(x / 208)
+                        current_player, player_str = self.make_move(game, current_player, player_str,
+                                                                    col_input)
 
             if game.get_outcome() != "in progress":
-                pygame.event.post(pygame.event.Event(game_over))
+                font = pygame.font.Font('freesansbold.ttf', 32)
+                text = font.render(game.get_outcome(), True, (255, 0, 0), (255, 255, 0))
+                text_rect = text.get_rect()
+                text_rect.center = (1280 // 2, 720 // 2)
+                self.screen.blit(text, text_rect)
+                pygame.display.flip()
+                game_over = True
 
-            # check to see if the player is a human or ai
-
-            # if ai, don't wait for input
-            if not isinstance(current_player, game_logic.HumanPlayer):
-                col_input = current_player.make_move(game)
-                current_player, player_str = self.make_move(game, current_player, current_player, player_str, col_input)
-            else:
-                # if human, wait for player to press a key
-                player_event = pygame.event.wait()
-                if player_event.type == pygame.MOUSEBUTTONDOWN:
-                    x, y = player_event.pos
-                    col_input = math.ceil(x/207)
-                    current_player, player_str = self.make_move(game, current_player, current_player, player_str, col_input)
             pygame.display.flip()
             self.clock.tick(60)  # limits FPS to 60
-
-    pygame.quit()
+        pygame.quit()
 
     def make_move(self, game: game_logic.AlignQuattroGame, current_player: game_logic.Player, player_str: str, col_input: int) -> tuple:
         row_input = game.get_row_from_available_columns(col_input)
