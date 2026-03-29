@@ -32,5 +32,5 @@ class RandomPlayer(Player):
 
 class HumanPlayer(Player):
 
-    def make_move(self, ):
+    def make_move(self):
 

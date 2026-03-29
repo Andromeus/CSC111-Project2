@@ -1,0 +1,5 @@
+"""Requirements for running Align Quattro."""
+python-ta
+pygame
+pytest
+hypothesis
