@@ -5,6 +5,7 @@ from typing import Any
 import copy
 import game_logic
 from game_logic import Player, AlignQuattroGame
+from mcts_dag import DAGNode, zobrist_hash, get_or_create_node
 from dataclasses import dataclass, field
 
 @dataclass
@@ -37,9 +38,10 @@ class MCTSPlayer(Player):
     num_searches: int
     exploration_weight: float
     is_dag: bool
+    self._transposition_table = {}
     _root: Any | None
 
-    def __init__(self, num_searches: int = 400, exploration_weight: float = 1.41) -> None:
+    def __init__(self, num_searches: int = 400, exploration_weight: float = sqrt(2)) -> None:
         """Initializes the MCTS player.
 
         Preconditions:
@@ -50,7 +52,7 @@ class MCTSPlayer(Player):
         >>> player.num_searches
         50
         >>> player.exploration_weight
-        1.41
+        1.5
         """
         self.num_searches = num_searches
         self.exploration_weight = exploration_weight
@@ -158,8 +160,8 @@ class MCTSPlayer(Player):
 
         while game.get_outcome() == "in progress":
             legal_moves = game.get_available_columns()
-            # We must expand all moves. Hence, if the number of unexpanded moves is not yet
-            # the total possible number of moves at this node, expand.
+            # We must expand all moves eventually. Hence, if the number of unexpanded moves is not yet
+            # the total possible number of moves at this node, stop this loop and expand one unexplored child.
             if len(current_node.children) != len(legal_moves):
                 break
 
@@ -348,12 +350,6 @@ class MCTSPlayer(Player):
         >> > node1 is node2  # doctest: +SKIP
         True
         """
-        state_hash = _zobrist_hash(game)
-
-        if state_hash in self._transposition_table:
-            return self._transposition_table[state_hash]
-
-        dag_node = _DAGNode()
-        self._transposition_table[state_hash] = dag_node
-        return dag_node
+        state_hash = zobrist_hash(root_copy)
+        return get_or_create_node(state_hash, self._transposition_table)
 
