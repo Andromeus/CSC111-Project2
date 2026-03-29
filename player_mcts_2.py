@@ -15,8 +15,7 @@ import copy
 from typing import Any
 from dataclasses import dataclass, field
 
-import game_logic
-from game_logic import Player, AlignQuattroGame
+from game_logic_2 import Player, AlignQuattroGame
 from mcts_dag import DAGNode, zobrist_hash, get_or_create_node
 
 

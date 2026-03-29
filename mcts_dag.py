@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import random
 import math
-import game_logic
+import game_logic_2
 
 
 ################################################################################
