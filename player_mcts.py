@@ -193,7 +193,18 @@ class MCTSPlayer(Player):
         >>> player = MCTSPlayer()
         >>> child = player._expand(None, game)   # doctest: +SKIP
         """
-        raise NotImplementedError
+        legal_moves = game.get_available_columns()
+        unexplored_legal_moves = [legal_move for legal_move in legal_moves if legal_move not in node.children]
+        chosen_move = random.choice(unexplored_legal_moves)
+        game.make_move(chosen_move)
+
+        if self.is_dag:
+            child_node = self._retrieve_or_create_dag_node(game)
+        else:
+            child_node = _TreeNode()
+
+        node.children[move] = child_node
+        return child_node
 
     def _simulate(self, game: AlignQuattroGame, root_is_red: bool) -> float:
         """Play a random rollout from game to a terminal outcome and return a reward.
@@ -215,7 +226,14 @@ class MCTSPlayer(Player):
         >>> reward in {-1.0, 0.0, 1.0}              # doctest: +SKIP
         True
         """
-        raise NotImplementedError
+        simulated_game = copy.deepcopy(game)
+        while simulated_game.get_outcome() == "in progress":
+            # These two lines keep making random moves on the copied game object until the game terminates
+            chosen = random.choice(simulated_game.get_available_columns())
+            simulated_game.make_move(move)
+
+        return self._reward_from_simulation(sim_game.get_outcome(), root_is_red)
+
 
     def _backpropagate(self, path: list[Any], reward: float) -> None:
         """Update visit counts and value sums along the visited path.
@@ -231,12 +249,16 @@ class MCTSPlayer(Player):
         >>> player = MCTSPlayer()
         >>> player._backpropagate([], 0.0)
         """
-        raise NotImplementedError
+        for node in reversed(path):
+            node.visit_count += 1
+            node.value_sum += reward
+            reward = -reward
+
 
     def _find_best_child(self, node: Any) -> tuple[int, Any]:
         """Return the (move, child) pair with the highest UCB score.
 
-        This helper is used during selection.
+        This helper is used during selection phase (Step 2 of the MCTS).
 
         Preconditions:
             - len(node.children) > 0
@@ -245,7 +267,20 @@ class MCTSPlayer(Player):
         >>> player._best_child(None)   # doctest: +SKIP
         (3, None)
         """
-        raise NotImplementedError
+        best_move_so_far = -1
+        best_child_so_far = None
+        best_score_so_far = -math.inf
+
+        for move, child in node.children.items():     # Extracts the key-value pair
+            score = self._ucb_score(node, child)
+            # Updates the best score so far if it surpasses the current best score
+            if best_score_so_far < score:
+                best_score_so_far = score
+                best_move_so_far = move
+                best_child_so_far = child
+
+        return (best_move_so_far, best_child_so_far)
+
 
     def _ucb_score(self, parent: Any, child: Any) -> float:
         """Return the UCB score for child from parent.
@@ -265,13 +300,21 @@ class MCTSPlayer(Player):
         >>> isinstance(score, float)                # doctest: +SKIP
         True
         """
-        raise NotImplementedError
+        if child.visit_count == 0:
+            return float('inf')
+
+        if parent.visit_count == 0:
+            return float('inf')
+
+        exploit_term = child.value_sum / child.visit_count
+        exploration_term = self.exploration_weight * math.sqrt(math.log(parent.visit_count) / child.visit_count)
+        return exploit_term + exploration_term
+
 
     def _choose_final_move(self, root_node: Any) -> int:
-        """Return the move to play after search completes.
+        """Return the move to play after step 3: search completes.
 
-        According to the project plan, this should choose the child with the
-        highest visit count rather than the highest average value.
+        The child with the highest visit count will be chosen, as this signifies the PUCT formula favors it the most.
 
         Preconditions:
             - len(root_node.children) > 0
@@ -280,14 +323,23 @@ class MCTSPlayer(Player):
         >>> isinstance(player._choose_final_move(None), int)   # doctest: +SKIP
         True
         """
-        raise NotImplementedError
+        optimal_move_so_far = -1
+        most_visited_move_so_far = -1
 
-    def _promote_child_to_root(self, current_root: Any, move: int) -> None:
+        for move, child in root_node.children.items():
+            if child.visit_count > most_visited_move_so_far:
+                most_visited_move_so_far = child.visit_count
+                optimal_move_so_far = move
+
+        return optimal_move_so_far
+
+
+    def _promote_child_to_root(self, current_root: Any, real_move: int) -> None:
         """Update this player's stored root after a real move is played.
 
-        If move is already among current_root.children, this method can preserve
-        the corresponding child as the new root so past search statistics are
-        reused on future turns.
+        If move is already among current_root.children, this method can preserve the corresponding child as the new
+        root so past search statistics can be reused on future turns. It updates the new root to be the child of the
+        original. If real_move is not legal or current root is None, it initializes the root to be None.
 
         Preconditions:
             - 0 <= move <= 6
@@ -295,10 +347,14 @@ class MCTSPlayer(Player):
         >>> player = MCTSPlayer()
         >>> player._promote_child_to_root(None, 3)
         """
-        self._root = None  # replace this line later
+        if current_root is not None and real_move in current_root.children:
+            self._root = current_root.children[real_move]
+        else:
+            self._root = None
 
-    def _reward_from_outcome(self, outcome: str, root_is_red: bool) -> float:
-        """Convert a terminal game outcome into a rollout reward.
+    def _reward_from_simulation(self, outcome: str, root_is_red: bool) -> float:
+        """Convert a terminal game outcome from a rollout / simulation into a rollout reward, in order for
+        backpropagation (Step 4 of the MCTS process).
 
         Preconditions:
             - outcome in {'red win', 'yellow win', 'tie'}
@@ -308,48 +364,54 @@ class MCTSPlayer(Player):
         0.0
         >>> player._reward_from_outcome('red win', True)
         1.0
-        >>> player._reward_from_outcome('yellow win', True)
-        -1.0
-        >>> player._reward_from_outcome('red win', False)
-        -1.0
         """
+        # Reward for tie is 0.0 (stalemate)
         if outcome == 'tie':
             return 0.0
+        #
         elif outcome == 'red win':
-            return 1.0 if root_is_red else -1.0
+            if root_is_red:
+                return 1.0
+            else:
+                return -1.0
         else:
-            return -1.0 if root_is_red else 1.0
+            if root_is_red:
+                return -1.0
+            else:
+                return 1.0
 
     def _root_player_is_red(self, game: AlignQuattroGame) -> bool:
-        """Return whether the player to move at game is red.
-
-        This is a thin wrapper so your MCTS code does not have to poke at the
-        game object all over the place.
-
-        Note: your current game class stores turn information in _is_red_move,
-        so this helper may need either direct access or a future public getter.
-
+        """Return whether the player to move in game is red.
         >>> game = AlignQuattroGame()
         >>> player = MCTSPlayer()
         >>> player._root_player_is_red(game)   # doctest: +SKIP
         True
         """
-        return game.is_red_turn()  # replace with a getter if your group adds one
+        return game.is_red_turn()
 
-    def _retrieve_or_create_dag_node(self, root_copy: AlignQuattroGame): -> DagNode
-        """Returns the DAG node representing this game state. If it exists, return it. Otherwise, 
-        create and return it.
-        
+
+    def _retrieve_or_create_dag_node(self, game: AlignQuattroGame) -> DAGNode:
+        """Return the DAG node representing game.
+
+        If this board state has already been seen, return the existing shared node. Otherwise, create a new node,
+        store it in the transposition table, and return it.
+
         Preconditions:
-        - self.use_dag
-        
-        >> > player = MCTSPlayer(use_dag=True)
-        >> > game = AlignQuattroGame()
-        >> > node1 = player._retrieve_or_create_dag_node(game)  # doctest: +SKIP
-        >> > node2 = player._retrieve_or_create_dag_node(game)  # doctest: +SKIP
-        >> > node1 is node2  # doctest: +SKIP
+            - self.is_dag
+
+        >>> player = MCTSPlayer()
+        >>> player.is_dag = True
+        >>> game = AlignQuattroGame()
+        >>> node1 = player._retrieve_or_create_dag_node(game)   # doctest: +SKIP
+        >>> node2 = player._retrieve_or_create_dag_node(game)   # doctest: +SKIP
+        >>> node1 is node2                                      # doctest: +SKIP
         True
         """
-        state_hash = zobrist_hash(root_copy)
+        state_hash = zobrist_hash(game)
         return get_or_create_node(state_hash, self._transposition_table)
 
+# python_ta.check_all(config={
+#     'extra-imports': [],  # the names (strs) of imported modules
+#     'allowed-io': [],     # the names (strs) of functions that call print/open/input
+#     'max-line-length': 120
+# })
