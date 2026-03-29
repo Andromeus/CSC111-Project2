@@ -328,7 +328,7 @@ def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> t
         # can pass row_input, col_input to pygame here
     return game.get_outcome(), move_sequence
 
-def run_game_pygame():
+# def run_game_pygame():
     # vis.draw_circle(row_input, col_input, player_str == "red")
 
 def print_simple_visual(board: list[list[Piece]]) -> None:
