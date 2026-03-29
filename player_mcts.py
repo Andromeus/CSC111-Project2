@@ -3,7 +3,6 @@ import math
 import random
 from typing import Any
 import copy
-import game_logic
 from game_logic import Player, AlignQuattroGame
 from mcts_dag import DAGNode, zobrist_hash, get_or_create_node
 from dataclasses import dataclass, field
@@ -29,6 +28,7 @@ class MCTSPlayer(Player):
         - num_searches: the number of MCTS iterations to run before choosing a move
         - exploration_weight: the exploration constant c used in the UCB formula
         - is_dag: whether to run a dag MCTS search or a regular tree implementation
+        - transposition_table: maps
         - _root: the current root node for the preserved DAG, if any
 
     Representation Invariants:
@@ -38,10 +38,10 @@ class MCTSPlayer(Player):
     num_searches: int
     exploration_weight: float
     is_dag: bool
-    self._transposition_table = {}
+    _transposition_table = {}
     _root: Any | None
 
-    def __init__(self, num_searches: int = 400, exploration_weight: float = sqrt(2)) -> None:
+    def __init__(self, num_searches: int = 400, exploration_weight: float = math.sqrt(2)) -> None:
         """Initializes the MCTS player.
 
         Preconditions:
@@ -57,6 +57,7 @@ class MCTSPlayer(Player):
         self.num_searches = num_searches
         self.exploration_weight = exploration_weight
         self.is_dag = True
+        self._transposition_table = {}
         self._root = None
 
     def make_move(self, game: AlignQuattroGame) -> int:
@@ -162,7 +163,7 @@ class MCTSPlayer(Player):
             legal_moves = game.get_available_columns()
             # We must expand all moves eventually. Hence, if the number of unexpanded moves is not yet
             # the total possible number of moves at this node, stop this loop and expand one unexplored child.
-            if len(current_node.children) != len(legal_moves):
+            if len(current_node.children) < len(legal_moves):
                 break
 
             move, next_node = self._find_best_child(current_node)
@@ -203,7 +204,7 @@ class MCTSPlayer(Player):
         else:
             child_node = _TreeNode()
 
-        node.children[move] = child_node
+        node.children[chosen_move] = child_node
         return child_node
 
     def _simulate(self, game: AlignQuattroGame, root_is_red: bool) -> float:
@@ -230,9 +231,9 @@ class MCTSPlayer(Player):
         while simulated_game.get_outcome() == "in progress":
             # These two lines keep making random moves on the copied game object until the game terminates
             chosen = random.choice(simulated_game.get_available_columns())
-            simulated_game.make_move(move)
+            simulated_game.make_move(chosen)
 
-        return self._reward_from_simulation(sim_game.get_outcome(), root_is_red)
+        return self._reward_from_simulation(simulated_game.get_outcome(), root_is_red)
 
 
     def _backpropagate(self, path: list[Any], reward: float) -> None:
@@ -314,7 +315,7 @@ class MCTSPlayer(Player):
     def _choose_final_move(self, root_node: Any) -> int:
         """Return the move to play after step 3: search completes.
 
-        The child with the highest visit count will be chosen, as this signifies the PUCT formula favors it the most.
+        The child with the highest visit count will be chosen, as this signifies the UCB formula favors it the most.
 
         Preconditions:
             - len(root_node.children) > 0
