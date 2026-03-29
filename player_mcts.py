@@ -1,11 +1,13 @@
+"""Monte Carlo Tree Search player for Align Quattro."""
 from __future__ import annotations
 import math
 import random
 from typing import Any
 import copy
-from game_logic import Player, AlignQuattroGame
-from mcts_dag import DAGNode, zobrist_hash, get_or_create_node
 from dataclasses import dataclass, field
+from game_logic_2 import Player, AlignQuattroGame
+from mcts_dag import DAGNode, zobrist_hash, get_or_create_node
+
 
 @dataclass
 class _TreeNode:
@@ -13,6 +15,7 @@ class _TreeNode:
     visit_count: int = 0
     value_sum: float = 0.0
     children: dict[int, "_TreeNode"] = field(default_factory=dict)
+
 
 class MCTSPlayer(Player):
     """An AlignQuattro player that chooses moves using Monte Carlo Tree (or Graph) Search.
@@ -34,10 +37,10 @@ class MCTSPlayer(Player):
     num_searches: int
     exploration_weight: float
     is_dag: bool
-    _transposition_table = {}
+    _transposition_table: dict
     _root: Any | None
 
-    def __init__(self, num_searches: int = 400, exploration_weight: float = math.sqrt(2)) -> None:
+    def __init__(self, num_searches: int = 400, exploration_weight: float = math.sqrt(2), is_dag: bool = True) -> None:
         """Initializes the MCTS player.
 
         Preconditions:
@@ -52,7 +55,7 @@ class MCTSPlayer(Player):
         """
         self.num_searches = num_searches
         self.exploration_weight = exploration_weight
-        self.is_dag = True
+        self.is_dag = is_dag
         self._transposition_table = {}
         self._root = None
 
@@ -74,7 +77,7 @@ class MCTSPlayer(Player):
     def _mcts_search(self, root_game: AlignQuattroGame) -> int:
         """Run MCTS from root_game and return the chosen move to make, based on the search results.
 
-        It first obtains the root DAG node, and then repeats the steps of MCTS: selection, expansion, simulation and
+        It first obtains the root node, and then repeats the steps of MCTS: selection, expansion, simulation and
         backpropagation, and then it chooses the child move with the greatest visit count.
 
         Preconditions:
@@ -125,7 +128,6 @@ class MCTSPlayer(Player):
         reward = self._simulate(iter_game, root_is_red)
         self._backpropagate(path, reward)
 
-
     def _select(self, root_node: Any, game: AlignQuattroGame) -> list[Any]:
         """Return the path selected during the selection phase of MCTS.
 
@@ -159,7 +161,6 @@ class MCTSPlayer(Player):
             path.append(current_node)
 
         return path
-
 
     def _expand(self, node: Any, game: AlignQuattroGame) -> Any:
         """Expand node by adding one previously unexplored legal move to the search tree/DAG.
@@ -211,7 +212,6 @@ class MCTSPlayer(Player):
 
         return self._reward_from_simulation(simulated_game.get_outcome(), root_is_red)
 
-
     def _backpropagate(self, path: list[Any], reward: float) -> None:
         """Update visit counts and value sums along the visited path.
 
@@ -226,7 +226,6 @@ class MCTSPlayer(Player):
             node.visit_count += 1
             node.value_sum += reward
             reward = -reward
-
 
     def _find_best_child(self, node: Any) -> tuple[int, Any]:
         """Return the (move, child) tuple with the highest UCB score.
@@ -250,7 +249,6 @@ class MCTSPlayer(Player):
 
         return (best_move_so_far, best_child_so_far)
 
-
     def _ucb_score(self, parent: Any, child: Any) -> float:
         """Return the UCB score of a child, relative to its parent.
 
@@ -270,15 +268,15 @@ class MCTSPlayer(Player):
         elif parent.visit_count == 0:
             return float('inf')
 
-        exploit_term = child.value_sum / child.visit_count
+        exploit_term = -(child.value_sum / child.visit_count)
         exploration_term = self.exploration_weight * math.sqrt(math.log(parent.visit_count) / child.visit_count)
         return exploit_term + exploration_term
 
-
     def _choose_final_move(self, root_node: Any) -> int:
-        """Return the move chosen after all search iterations are complete. The selected move is the one whose child has
-        the greatest visit count. The child with the highest visit count will be chosen, as this signifies the UCB
-        formula favors it the most.
+        """Return the move chosen after all search iterations are complete.
+
+        The selected move is the one whose child has the greatest visit count. The child with the highest visit count
+        will be chosen.
 
         Preconditions:
             - len(root_node.children) > 0
@@ -297,7 +295,6 @@ class MCTSPlayer(Player):
 
         return optimal_move_so_far
 
-
     def _promote_child_to_root(self, current_root: Any, real_move: int) -> None:
         """Update this player's stored root after a real move is played.
 
@@ -306,7 +303,7 @@ class MCTSPlayer(Player):
         original. If real_move is not legal or current root is None, it resets the root to be None.
 
         Preconditions:
-            - 0 <= move <= 6
+            - 0 <= real_move <= 6
 
         >>> player = MCTSPlayer()
         >>> player._promote_child_to_root(None, 3)
@@ -358,7 +355,6 @@ class MCTSPlayer(Player):
         """
         return game.is_red_turn()
 
-
     def _retrieve_or_create_dag_node(self, game: AlignQuattroGame) -> DAGNode:
         """Return the DAG node representing the AlignQuattroGame object game.
 
@@ -378,6 +374,7 @@ class MCTSPlayer(Player):
         """
         state_hash = zobrist_hash(game)
         return get_or_create_node(state_hash, self._transposition_table)
+
 
 if __name__ == '__main__':
     import doctest

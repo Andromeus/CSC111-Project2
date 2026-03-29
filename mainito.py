@@ -4,9 +4,10 @@ MAIN FILE
 
 Run this file to play a game of AlignQuattro against the MCTS AI.
 """
-
+# from game_logic import HumanPlayer, RandomPlayer, run_game, run_games
+from player_mcts import MCTSPlayer
 from game_logic_2 import HumanPlayer, RandomPlayer, run_game, run_games
-from player_mcts_2 import MCTSPlayer
+# from player_mcts_2 import MCTSPlayer
 
 
 def main() -> None:
@@ -23,7 +24,7 @@ def main() -> None:
     #   800  → medium      (~200ms per AI move)
     #   2000 → hard        (~500ms per AI move)
     difficulty = input("Choose difficulty — easy / medium / hard (default: medium): ").strip().lower()
-    sims = {'easy': 400, 'hard': 5000}.get(difficulty, 1600)
+    sims = {'easy': 400, 'hard': 7000}.get(difficulty, 1600)
 
     human = HumanPlayer()
     ai = MCTSPlayer(num_searches=sims, is_dag=True)
