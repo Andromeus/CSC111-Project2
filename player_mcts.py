@@ -215,7 +215,6 @@ class MCTSPlayer(Player):
         If self.use_heuristics is True, a simple priority is applied:
             1. If the current player can win immediately, take it
             2. If the opponent can win immediately, block it
-            3. Otherwise prefer centre columns
         If self.use_heuristics is False, moves are chosen completely at random
         
         The reward is calculated based on the perspective of the player at the root of the search, with
@@ -269,7 +268,7 @@ class MCTSPlayer(Player):
         return won
 
     def _heuristic_move(self, game: AlignQuattroGame) -> int:
-        """Return a move using a win/block/centre priority.
+        """Return a move using a win/block priority.
 
         Uses _would_win to temporarily place and restore pieces instead of
         copying the entire game state.
@@ -277,7 +276,6 @@ class MCTSPlayer(Player):
         Priority order:
             1. Win immediately
             2. Block opponent's immediate win
-            3. Prefer centre columns: 3, 2, 4, 1, 5, 0, 6
 
         Preconditions:
             - game.get_outcome() == 'in progress'
@@ -295,11 +293,7 @@ class MCTSPlayer(Player):
         for col in legal:
             if self._would_win(game, col, not is_red):
                 return col 
-        
-        # Fallback
-        for col in [3, 2, 4, 1, 5, 0, 6]:
-            if col in legal:
-                return col
+                
         return random.choice(legal)
 
     
