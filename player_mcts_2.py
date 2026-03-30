@@ -56,7 +56,7 @@ class MCTSPlayer(Player):
     _root: Any | None
     _transposition_table: dict[int, DAGNode]
 
-    def __init__(self, num_searches: int = 400,
+    def __init__(self, num_searches: int = 20000,
                  exploration_weight: float = math.sqrt(2),  # FIX 1: was sqrt(2), missing math.
                  is_dag: bool = True) -> None:
         """Initializes the MCTS player.

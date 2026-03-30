@@ -5,7 +5,7 @@ MAIN FILE
 Run this file to play a game of AlignQuattro against the MCTS AI.
 """
 # from game_logic import HumanPlayer, RandomPlayer, run_game, run_games
-from player_mcts import MCTSPlayer
+from player_mcts_2 import MCTSPlayer
 from game_logic_2 import HumanPlayer, RandomPlayer, run_game, run_games
 # from player_mcts_2 import MCTSPlayer
 

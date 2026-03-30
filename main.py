@@ -2,6 +2,8 @@
 
 import game_logic
 import game_display
+import player_mcts_2
+
 
 
 def run_game(red: game_logic.Player, yellow: game_logic.Player, visualization_type: str = "none") -> tuple[str, list[tuple[str, int, int]]]:
@@ -42,6 +44,7 @@ def run_game(red: game_logic.Player, yellow: game_logic.Player, visualization_ty
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+    run_game(game_logic.HumanPlayerPygame(), player_mcts_2.MCTSPlayer(), "pygame")
 
     # import python_ta
     # python_ta.check_all(config={

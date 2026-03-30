@@ -62,7 +62,8 @@ class AlignQuattroVisualization:
         if is_red:
             color = (255, 0, 0)
         else:
-            color = (255, 255, 0)
+            # color = (255, 255, 0)
+            color = (255,255,0)
         circle_radius = 55
         center_y = (row + 1) * (10 + circle_radius) + circle_radius * row
         center_x = (col + 1) * (65 + circle_radius) + circle_radius * col
@@ -93,8 +94,8 @@ class AlignQuattroVisualization:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         x = event.pos[0]
                         col_input = math.floor((x-32) / 175)
-                        current_player, player_str = self.make_move(game, current_player, player_str,
-                                                                    col_input)
+                        if col_input in game.get_available_columns():
+                            current_player, player_str = self.make_move(game, current_player, player_str, col_input)
 
             if game.get_outcome() != "in progress":
                 font = pygame.font.Font('freesansbold.ttf', 32)
