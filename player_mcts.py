@@ -307,10 +307,11 @@ class MCTSPlayer(Player):
             - all(node is not None for node in path)
             - reward in {-1.0, 0.0, 1.0}
         """
-        for node in reversed(path):
+        for depth, node in enumerate(path):
             node.visit_count += 1
-            node.value_sum += reward
-            reward = -reward
+            # Depth 0 is the root. Even depths align with the root player.
+            # Odd depths align with the opponent.
+            node.value_sum += reward if depth % 2 == 0 else -reward
 
     def _find_best_child(self, node: Any) -> tuple[int, Any]:
         """Return the (move, child) tuple with the highest UCB score.
