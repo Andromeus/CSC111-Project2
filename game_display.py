@@ -10,6 +10,7 @@ import pygame
 import game_logic
 
 COLOR_DICTIONARY = {"white": (255, 255, 255), "blue": (0, 0, 255), "red": (255, 0, 0), "yellow": (255, 255, 0)}
+GAME_STATES = {0: "menu", 1: "gameplay", 2: "data_visualization"}
 
 
 class AlignQuattroVisualization:
@@ -21,14 +22,19 @@ class AlignQuattroVisualization:
         - running: a boolean which controls the pygame game loop and keeps it running while true.
         - red: a game_logic.Player instance attribute representing the red player.
         - yellow: a game_logic.Player instance attribute representing the yellow player.
+        - game_state: an int representing the current game_state, based on the GAME_STATES dictionary.
+
+    Representation Invariants
+        - -1 < self.game_state < len(GAME_STATES)
     """
     screen: pygame.Surface
     clock: pygame.time.Clock
     running: bool
     red: game_logic.Player
     yellow: game_logic.Player
+    game_state: int
 
-    def __init__(self, red: game_logic.Player, yellow: game_logic.Player) -> None:
+    def __init__(self, red: game_logic.Player, yellow: game_logic.Player, g_state: int = 0) -> None:
         """Initialize AlignQuattroVisualization class.
 
         Preconditions:
@@ -42,6 +48,48 @@ class AlignQuattroVisualization:
         self.draw_board()
         self.red = red
         self.yellow = yellow
+        self.game_state = g_state
+
+    def run_game_loop(self) -> None:
+        """Runs the game loop to keep pygame up and running. Goes until the pygame window is closed."""
+        game = game_logic.AlignQuattroGame()
+        current_player = self.red
+        player_str = "red"
+        game_over = False
+
+
+        while self.running:
+            # if ai, don't wait for input
+            if not isinstance(current_player, game_logic.HumanPlayerPygame):
+                col_input = current_player.make_move(game)
+                current_player, player_str = self.make_move(game, current_player, player_str, col_input)
+
+            # pygame.QUIT event means the user clicked X to close your window
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    # game over screen
+                elif event.type == pygame.MOUSEBUTTONDOWN and isinstance(current_player, game_logic.HumanPlayerPygame):
+                    # if human, wait for player to press a key
+                    # if player clicks screen, then make a move
+                    x = event.pos[0]
+                    col_input = math.floor((x - 32) / 175)
+                    if col_input in game.get_available_columns():
+                        current_player, player_str = self.make_move(game, current_player, player_str, col_input)
+
+            if game.get_outcome() != "in progress":
+                font = pygame.font.Font('freesansbold.ttf', 32)
+                text = font.render(game.get_outcome(), True,
+                                   COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
+                text_rect = text.get_rect()
+                text_rect.center = (1280 // 2, 720 // 2)
+                self.screen.blit(text, text_rect)
+                pygame.display.flip()
+                game_over = True
+
+            pygame.display.flip()
+            self.clock.tick(60)  # limits FPS to 60
+
 
     def draw_board(self) -> None:
         """Draws an empty board"""
@@ -82,7 +130,7 @@ class AlignQuattroVisualization:
 
         while self.running and not game_over:
             # if ai, don't wait for input
-            if not isinstance(current_player, game_logic.HumanPlayerPygame):
+            if not isinstance(current_player, game_logic.HumanPlayerPygame):0
                 col_input = current_player.make_move(game)
                 current_player, player_str = self.make_move(game, current_player, player_str, col_input)
 
@@ -111,7 +159,6 @@ class AlignQuattroVisualization:
 
             pygame.display.flip()
             self.clock.tick(60)  # limits FPS to 60
-        pygame.quit()
 
     def make_move(self, game: game_logic.AlignQuattroGame, current_player: game_logic.Player,
                   player_str: str, col_input: int) -> tuple:
