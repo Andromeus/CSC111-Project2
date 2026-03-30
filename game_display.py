@@ -46,6 +46,7 @@ class AlignQuattroVisualization:
         white = (255, 255, 255)
         for row in range(6):
             center_y = (row + 1) * (10 + circle_radius) + circle_radius * row
+            pygame.draw.line(self.screen, white, (32 + 175 * (row+1), 0), (32 + 175 * (row+1), 1280), 3)
             for column in range(7):
                 center_x = (column + 1) * (65 + circle_radius) + circle_radius * column
                 pygame.draw.circle(self.screen, white, (center_x, center_y), circle_radius)
@@ -91,7 +92,7 @@ class AlignQuattroVisualization:
                     # if player clicks screen, then make a move
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         x = event.pos[0]
-                        col_input = math.ceil(x / 208)
+                        col_input = math.floor((x-32) / 175)
                         current_player, player_str = self.make_move(game, current_player, player_str,
                                                                     col_input)
 
