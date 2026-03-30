@@ -5,7 +5,7 @@ import random
 from typing import Any
 import copy
 from dataclasses import dataclass, field
-from game_logic_2 import Player, AlignQuattroGame
+from game_logic import Player, AlignQuattroGame
 from mcts_dag import DAGNode, zobrist_hash, get_or_create_node
 
 
