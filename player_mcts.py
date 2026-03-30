@@ -28,6 +28,7 @@ class MCTSPlayer(Player):
         - exploration_weight: the exploration constant c used in the UCB formula
         - is_dag: whether to run a dag MCTS search or a regular tree implementation
         - transposition_table: maps hash keys to previously seen game states when using a DAG
+        - use_heuristics: whether to use heuristics (win/block/center) during rollouts
         - _root: the current root node for the preserved DAG, if any
 
     Representation Invariants:
@@ -37,10 +38,11 @@ class MCTSPlayer(Player):
     num_searches: int
     exploration_weight: float
     is_dag: bool
+    use_heuristics: bool
     _transposition_table: dict
     _root: Any | None
 
-    def __init__(self, num_searches: int = 400, exploration_weight: float = math.sqrt(2), is_dag: bool = True) -> None:
+    def __init__(self, num_searches: int = 400, exploration_weight: float = math.sqrt(2), is_dag: bool = True, use_heuristics: bool = True) -> None:
         """Initializes the MCTS player.
 
         Preconditions:
@@ -58,9 +60,16 @@ class MCTSPlayer(Player):
         self.is_dag = is_dag
         self._transposition_table = {}
         self._root = None
+        self.use_heuristics = use_heuristics
 
     def make_move(self, game: AlignQuattroGame) -> int:
         """Return the move chosen by MCTS for the given game state.
+
+        Before running MCTS, checks for forced moves at the root:
+            1. If the AI can win immediately, take it
+            2. If the opponent can win immediately, block it
+        These are guaranteed correct and don't need simulations to discover.
+        MCTS only runs when no forced move exists.
 
         Preconditions:
             - game.get_outcome() == 'in progress'
@@ -72,6 +81,16 @@ class MCTSPlayer(Player):
         >>> 0 <= move <= 6
         True
         """
+        is_red = game.is_red_turn()
+
+        # Forced move check to never miss an immediate win or block
+        for col in game.get_available_columns():
+            if self._would_win(game, col, is_red):
+                return col
+        for col in game.get_available_columns():
+            if self._would_win(game, col, not is_red):
+                return col
+
         return self._mcts_search(game)
 
     def _mcts_search(self, root_game: AlignQuattroGame) -> int:
@@ -191,8 +210,15 @@ class MCTSPlayer(Player):
         return child_node
 
     def _simulate(self, game: AlignQuattroGame, root_is_red: bool) -> float:
-        """Play random moves until the game terminates (ends in a player winning or a tie) and returns the resulting
-        reward. The reward is calculated based on the perspective of the player at the root of the search, with
+        """Play a rollout from game to a terminal state and return the reward.
+
+        If self.use_heuristics is True, a simple priority is applied:
+            1. If the current player can win immediately, take it
+            2. If the opponent can win immediately, block it
+            3. Otherwise prefer centre columns
+        If self.use_heuristics is False, moves are chosen completely at random
+        
+        The reward is calculated based on the perspective of the player at the root of the search, with
         1.0 for a root player win, 0.0 for a draw, and -1.0 if the root player loses.
 
         Preconditions:
@@ -204,14 +230,81 @@ class MCTSPlayer(Player):
         >>> reward in {-1.0, 0.0, 1.0}              # doctest: +SKIP
         True
         """
-        simulated_game = copy.deepcopy(game)
-        while simulated_game.get_outcome() == "in progress":
-            # These two lines keep making random moves on the copied game object until the game terminates
-            chosen = random.choice(simulated_game.get_available_columns())
-            simulated_game.make_move(chosen)
+        
+        while game.get_outcome() == "in progress":
+        # We keep making moves until the game terminates
+            if self.use_heuristics:
+                move = self._heuristic_move(game)
+            else:
+                move = random.choice(game.get_available_columns())
+            game.make_move(move)
+            
+        return self._reward_from_outcome(game.get_outcome(), root_is_red)
 
-        return self._reward_from_simulation(simulated_game.get_outcome(), root_is_red)
+    def _would_win(self, game: AlignQuattroGame, col: int, as_red: bool) -> bool:
+        """Return True if placing a piece in a column for the given player wins immediately.
 
+        Temporarily places a piece, checks for a win, then restores the board. (this is more efficiet than using deepcopy which takes too much time)
+
+        Preconditions:
+            - col in game.get_available_columns()
+            - as_red in {True, False}
+        """
+        board = game.get_board()
+        row = game.get_row_from_available_columns(col)
+        player = 'red' if as_red else 'yellow'
+
+        # Temporarily place the piece
+        board[row][col].set_piece_type(player)
+
+        # Check all four directions for a win
+        won = game.check_direction_win(row, col, 'horizontal', player) or \
+              game.check_direction_win(row, col, 'vertical', player) or \
+              game.check_direction_win(row, col, 'positive diagonal', player) or \
+              game.check_direction_win(row, col, 'negative diagonal', player)
+
+        # Restore the board — no copy needed
+        board[row][col].set_piece_type('empty')
+
+        return won
+
+    def _heuristic_move(self, game: AlignQuattroGame) -> int:
+        """Return a move using a win/block/centre priority.
+
+        Uses _would_win to temporarily place and restore pieces instead of
+        copying the entire game state.
+
+        Priority order:
+            1. Win immediately
+            2. Block opponent's immediate win
+            3. Prefer centre columns: 3, 2, 4, 1, 5, 0, 6
+
+        Preconditions:
+            - game.get_outcome() == 'in progress'
+            - len(game.get_available_columns()) > 0
+        """
+        legal = game.get_available_columns()
+        is_red = game.is_red_turn()
+        block_col = None
+
+        for col in legal:
+            # Priority 1: current player wins immediately
+            if self._would_win(game, col, is_red):
+                return col
+            # Priority 2: opponent wins here — mark as block candidate
+            if self._would_win(game, col, not is_red):
+                block_col = col
+
+        if block_col is not None:
+            return block_col
+
+        # Priority 3: centre-biased fallback
+        for col in [3, 2, 4, 1, 5, 0, 6]:
+            if col in legal:
+                return col
+
+        return random.choice(legal)
+    
     def _backpropagate(self, path: list[Any], reward: float) -> None:
         """Update visit counts and value sums along the visited path.
 
