@@ -190,6 +190,10 @@ class AlignQuattroGame:
         """Returns the lowest row for the given column, or self._valid_moves[input_col]"""
         return self._valid_moves[input_col]
 
+    def is_red_turn(self) -> bool:
+        """Returns True if it is currently red's turn, False if it is yellow's turn."""
+        return self._is_red_move
+
 
 class Piece:
     """A class representing a red/yellow/empty piece in an Align Quattro game.
