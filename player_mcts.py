@@ -285,25 +285,23 @@ class MCTSPlayer(Player):
         """
         legal = game.get_available_columns()
         is_red = game.is_red_turn()
-        block_col = None
 
+        # First pass: take a win
         for col in legal:
-            # Priority 1: current player wins immediately
             if self._would_win(game, col, is_red):
                 return col
-            # Priority 2: opponent wins here — mark as block candidate
+        
+        # Second pass: block first threat found
+        for col in legal:
             if self._would_win(game, col, not is_red):
-                block_col = col
-
-        if block_col is not None:
-            return block_col
-
-        # Priority 3: centre-biased fallback
+                return col 
+        
+        # Fallback
         for col in [3, 2, 4, 1, 5, 0, 6]:
             if col in legal:
                 return col
-
         return random.choice(legal)
+
     
     def _backpropagate(self, path: list[Any], reward: float) -> None:
         """Update visit counts and value sums along the visited path.
