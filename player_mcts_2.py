@@ -15,7 +15,8 @@ import copy
 from typing import Any
 from dataclasses import dataclass, field
 
-from game_logic_2 import Player, AlignQuattroGame
+import game_logic
+from game_logic import Player, AlignQuattroGame
 from mcts_dag import DAGNode, zobrist_hash, get_or_create_node
 
 
@@ -79,6 +80,12 @@ class MCTSPlayer(Player):
     def make_move(self, game: AlignQuattroGame) -> int:
         """Return the move chosen by MCTS for the given game state.
 
+        Before running MCTS, checks for forced moves at the root:
+            1. If the AI can win immediately, take it
+            2. If the opponent can win immediately, block it
+        These are guaranteed correct and don't need simulations to discover.
+        MCTS only runs when no forced move exists.
+
         Preconditions:
             - game.get_outcome() == 'in progress'
             - len(game.get_available_columns()) > 0
@@ -89,6 +96,16 @@ class MCTSPlayer(Player):
         >>> move in range(7)
         True
         """
+        is_red = game.is_red_turn()
+
+        # Forced move check — never miss an immediate win or block
+        for col in game.get_available_columns():
+            if self._would_win(game, col, is_red):
+                return col
+        for col in game.get_available_columns():
+            if self._would_win(game, col, not is_red):
+                return col
+
         return self._mcts_search(game)
 
     def _mcts_search(self, root_game: AlignQuattroGame) -> int:
@@ -185,7 +202,17 @@ class MCTSPlayer(Player):
         return child
 
     def _simulate(self, game: AlignQuattroGame, root_is_red: bool) -> float:
-        """Play a random rollout from game to a terminal state and return the reward.
+        """Play a heuristic rollout from game to a terminal state and return the reward.
+
+        At each step of the rollout, instead of picking a purely random move,
+        a simple priority is applied:
+            1. If the current player can win immediately, take it
+            2. If the opponent can win immediately, block it
+            3. Otherwise prefer centre columns
+
+        game is mutated directly — callers must pass a copy if they need the
+        original preserved. _run_one_iteration already passes iter_game which
+        is a deep copy, so no additional copy is needed here.
 
         Reward is from the root player's perspective:
             +1.0 → root player wins
@@ -195,11 +222,74 @@ class MCTSPlayer(Player):
         Preconditions:
             - game.get_outcome() in {'in progress', 'red win', 'yellow win', 'tie'}
         """
-        sim_game = copy.deepcopy(game)
-        while sim_game.get_outcome() == "in progress":
-            move = random.choice(sim_game.get_available_columns())
-            sim_game.make_move(move)
-        return self._reward_from_outcome(sim_game.get_outcome(), root_is_red)
+        # No deepcopy here — caller already passes a copy (iter_game)
+        while game.get_outcome() == "in progress":
+            move = self._heuristic_move(game)
+            game.make_move(move)
+        return self._reward_from_outcome(game.get_outcome(), root_is_red)
+
+    def _would_win(self, game: AlignQuattroGame, col: int, as_red: bool) -> bool:
+        """Return True if placing a piece in col for the given player wins immediately.
+
+        Temporarily places a piece, checks for a win, then restores the board.
+        No deep copy is made — this is the key performance optimisation.
+
+        Preconditions:
+            - col in game.get_available_columns()
+            - as_red in {True, False}
+        """
+        board = game.get_board()
+        row = game.get_row_from_available_columns(col)
+        player = 'red' if as_red else 'yellow'
+
+        # Temporarily place the piece
+        board[row][col].set_piece_type(player)
+
+        # Check all four directions for a win
+        won = game.check_direction_win(row, col, 'horizontal', player) or               game.check_direction_win(row, col, 'vertical', player) or               game.check_direction_win(row, col, 'positive diagonal', player) or               game.check_direction_win(row, col, 'negative diagonal', player)
+
+        # Restore the board — no copy needed
+        board[row][col].set_piece_type('empty')
+
+        return won
+
+    def _heuristic_move(self, game: AlignQuattroGame) -> int:
+        """Return a move using a win/block/centre priority with zero deep copies.
+
+        Uses _would_win to temporarily place and restore pieces instead of
+        copying the entire game state. This is ~10x faster than deep copy
+        per column check.
+
+        Priority order:
+            1. Win immediately
+            2. Block opponent's immediate win
+            3. Prefer centre columns: 3, 2, 4, 1, 5, 0, 6
+
+        Preconditions:
+            - game.get_outcome() == 'in progress'
+            - len(game.get_available_columns()) > 0
+        """
+        legal = game.get_available_columns()
+        is_red = game.is_red_turn()
+        block_col = None
+
+        for col in legal:
+            # Priority 1: current player wins immediately
+            if self._would_win(game, col, is_red):
+                return col
+            # Priority 2: opponent wins here — mark as block candidate
+            if self._would_win(game, col, not is_red):
+                block_col = col
+
+        if block_col is not None:
+            return block_col
+
+        # Priority 3: centre-biased fallback
+        for col in [3, 2, 4, 1, 5, 0, 6]:
+            if col in legal:
+                return col
+
+        return random.choice(legal)
 
     def _backpropagate(self, path: list[Any], reward: float) -> None:
         """Update visit counts and value sums along the visited path.
