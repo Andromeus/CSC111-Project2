@@ -51,17 +51,23 @@ class AlignQuattroGame:
             self._board = board
         else:
             self._board = []
-            self._valid_moves = {6: 5}
+            self._valid_moves = {}
             for i in range(0, 6):
                 self._board.append([])
                 self._valid_moves[i] = 5
                 for j in range(0, 7):
                     self._board[i].append(Piece(i, j))
+            self._valid_moves[6] = 5
         self._is_red_move = is_red_move
         self.outcome = game_outcome
 
     def get_available_columns(self) -> list[int]:
-        """Returns a list of integers representing columns still open for moves (so 0-6)"""
+        """Returns a list of integers representing columns still open for moves (so 0-6)
+
+        >>> game = AlignQuattroGame()
+        >>> game.get_available_columns()
+        [0, 1, 2, 3, 4, 5, 6]
+        """
         return [x for x in self._valid_moves if self._valid_moves[x] >= 0]
 
     def make_move(self, col: int) -> None:
@@ -75,6 +81,12 @@ class AlignQuattroGame:
         Preconditions:
             - col in self.get_available_columns()
 
+        >>> game = AlignQuattroGame()
+        >>> game.get_row_from_available_columns(0)
+        5
+        >>> game.make_move(0)
+        >>> game.get_row_from_available_columns(0)
+        4
         """
         row = self._valid_moves[col]
         if self._is_red_move:
@@ -102,6 +114,22 @@ class AlignQuattroGame:
         Preconditions:
             - 0 <= r <= 5
             - 0 <= c <= 6
+
+        >>> game = AlignQuattroGame()
+        >>> game.make_move(0)
+        >>> game.make_move(0)
+        >>> game.make_move(1)
+        >>> game.make_move(1)
+        >>> game.make_move(3)
+        >>> game.make_move(3)
+        >>> game.get_outcome()
+        'in progress'
+        >>> game.check_win(5, 4)
+        >>> game.get_outcome()
+        'in progress'
+        >>> game.check_win(5, 2)
+        >>> game.get_outcome()
+        'red win'
         """
         if self._is_red_move:
             player = 'red'
@@ -133,6 +161,18 @@ class AlignQuattroGame:
             - 0 <= c <= 6
             - direction in {"horizontal", "vertical", "positive diagonal", "negative diagonal"}
             - player in {'red', 'yellow'}
+
+        >>> game = AlignQuattroGame()
+        >>> game.make_move(0)
+        >>> game.make_move(0)
+        >>> game.make_move(1)
+        >>> game.make_move(1)
+        >>> game.make_move(3)
+        >>> game.make_move(3)
+        >>> game.check_direction_win(5, 2, "vertical", "red")
+        False
+        >>> game.check_direction_win(5, 2, "horizontal", "red")
+        True
         """
         i = 1
         aligned_so_far = 1
@@ -167,6 +207,12 @@ class AlignQuattroGame:
             - 0 <= r <= 5
             - 0 <= c <= 6
             - direction in {"horizontal", "vertical", "positive diagonal", "negative diagonal"}
+
+        >>> game = AlignQuattroGame()
+        >>> game.update_row_col_indices("positive diagonal", 5, 3, 1)
+        (6, 4, 4, 2)
+        >>> game.update_row_col_indices("horizontal", 5, 3, 1)
+        (5, 4, 5, 2)
         """
         if direction == "horizontal":
             first_row_index, first_col_index, second_row_index, second_col_index = r, c + i, r, c - i
@@ -187,12 +233,43 @@ class AlignQuattroGame:
         return self._board
 
     def get_row_from_available_columns(self, input_col: int) -> int:
-        """Returns the lowest row for the given column, or self._valid_moves[input_col]"""
+        """Returns the lowest row for the given column, or self._valid_moves[input_col]
+
+        Preconditions:
+            - -1 < input_col < 7
+
+        >>> game = AlignQuattroGame()
+        >>> game.get_row_from_available_columns(6)
+        5
+        """
         return self._valid_moves[input_col]
 
     def is_red_turn(self) -> bool:
-        """Returns True if it is currently red's turn, False if it is yellow's turn."""
+        """Returns True if it is currently red's turn, False if it is yellow's turn.
+
+        >>> game = AlignQuattroGame()
+        >>> game.is_red_turn()
+        True
+        >>> game.flip_turn()
+        >>> game.is_red_turn()
+        False
+        """
         return self._is_red_move
+
+    def flip_turn(self) -> None:
+        """Flips whose turn it is without placing a piece.
+
+        Used by heuristic rollouts to simulate what the opponent would do
+        from the current board position without modifying any pieces.
+
+        >>> game = AlignQuattroGame()
+        >>> game.is_red_turn()
+        True
+        >>> game.flip_turn()
+        >>> game.is_red_turn()
+        False
+        """
+        self._is_red_move = not self._is_red_move
 
 
 class Piece:
@@ -221,7 +298,12 @@ class Piece:
         self._col_pos = col_val
 
     def get_piece_type(self) -> str:
-        """Returns self._piece_type"""
+        """Returns self._piece_type
+
+        >>> piece = Piece(5, 0, "red")
+        >>> piece.get_piece_type()
+        'red'
+        """
         return self._piece_type
 
     def set_piece_type(self, set_type: str) -> None:
@@ -229,6 +311,13 @@ class Piece:
 
         Preconditions:
             - set_type in {'red', 'yellow', 'empty'}
+
+        >>> piece = Piece(5, 0, "red")
+        >>> piece.get_piece_type()
+        'red'
+        >>> piece.set_piece_type('yellow')
+        >>> piece .get_piece_type()
+        'yellow'
         """
         self._piece_type = set_type
 
@@ -256,6 +345,12 @@ class RandomPlayer(Player):
 
         Preconditions:
             - There is at least one valid move for the given game
+
+        >>> game = AlignQuattroGame()
+        >>> random = RandomPlayer()
+        >>> move = random.make_move(game)
+        >>> -1 < move < 7
+        True
         """
         possible_moves = game.get_available_columns()
         return random.choice(possible_moves)
@@ -273,14 +368,20 @@ class HumanPlayer(Player):
             choice = input("\nChoose a column, 1-7: ")
         return int(choice) - 1
 
-class HumanPlayerPygame(Player):
-    def make_move(self, game: AlignQuattroGame) -> int:
-        pass
 
+class HumanPlayerPygame(Player):
+    """An AlignQuattro player which takes real human input to make human decided moves each turn.
+
+    Uses pygame mouse input to make moves based on the column clicked.
+    """
+    def make_move(self, game: AlignQuattroGame) -> int:
+        """Allow the pygame game loop to make moves instead of making a move directly."""
+        pass
 
 ################################################################################
 # Functions for running games
 ################################################################################
+
 
 def run_games(n: int, red: Player, yellow: Player, visualization_type: str = "none") -> None:
     """Run n games using the given Players. Visualize with the specified visualization request.
@@ -308,7 +409,7 @@ def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> t
     Return the outcome: either 'red win', 'yellow win', or 'tie'.
 
     Preconditions:
-        - visualization_type in {"none", "text", "pygame"}
+        - visualization_type in {"none", "text"}
     """
     game = AlignQuattroGame()
 
@@ -316,9 +417,6 @@ def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> t
     current_player = red
     player_str = "red"
     row_input, col_input = -1, -1
-    vis = None
-    if visualization_type == "pygame":
-        vis = game_display.AlignQuattroVisualization()
     while game.get_outcome() == "in progress":
         if visualization_type == "text":
             print_simple_visual(game.get_board())
@@ -335,8 +433,6 @@ def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> t
         # can pass row_input, col_input to pygame here
     return game.get_outcome(), move_sequence
 
-# def run_game_pygame():
-    # vis.draw_circle(row_input, col_input, player_str == "red")
 
 def print_simple_visual(board: list[list[Piece]]) -> None:
     """Prints out a visualization of a board, with Os Rs and Ys for empty, red, and yellow."""
@@ -358,11 +454,11 @@ if __name__ == '__main__':
     import doctest
     doctest.testmod()
 
-    # import python_ta
-    # python_ta.check_all(config={
-    #     'max-line-length': 120,
-    #     'disable': ['static_type_checker'],
-    #     'extra-imports': ['random', 'copy', 'game_display'],
-    #     'allowed-io': ['run_game', 'run_games', 'print_simple_visual', 'HumanPlayer.make_move']
-    #
-    # })
+    import python_ta
+    python_ta.check_all(config={
+        'max-line-length': 120,
+        'disable': ['static_type_checker'],
+        'extra-imports': ['random', 'copy', 'game_display'],
+        'allowed-io': ['run_game', 'run_games', 'print_simple_visual', 'HumanPlayer.make_move']
+
+    })
