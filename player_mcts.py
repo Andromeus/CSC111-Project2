@@ -231,15 +231,15 @@ class MCTSPlayer(Player):
         True
         """
         
-        while game.get_outcome() == "in progress":
         # We keep making moves until the game terminates
+        while game.get_outcome() == "in progress":
             if self.use_heuristics:
                 move = self._heuristic_move(game)
             else:
                 move = random.choice(game.get_available_columns())
             game.make_move(move)
             
-        return self._reward_from_outcome(game.get_outcome(), root_is_red)
+        return self._reward_from_simulation(game.get_outcome(), root_is_red)
 
     def _would_win(self, game: AlignQuattroGame, col: int, as_red: bool) -> bool:
         """Return True if placing a piece in a column for the given player wins immediately.
