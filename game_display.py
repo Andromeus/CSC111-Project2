@@ -9,27 +9,31 @@ import math
 import pygame
 import game_logic
 
+COLOR_DICTIONARY = {"white": (255, 255, 255), "blue": (0, 0, 255), "red": (255, 0, 0), "yellow": (255, 255, 0)}
+
 
 class AlignQuattroVisualization:
     """A class for representing an AlignQuattro game with pygame
 
     Instance Attributes:
-        - screen
-        - clock
-        - running
-
-    Representation Invariants:
-        -
+        - screen: a pygame.Surface instance attribute through which the AlignQuattro game is visualized.
+        - clock: a pygame.time.Clock instance attribute used for keeping track of time in pygame.
+        - running: a boolean which controls the pygame game loop and keeps it running while true.
+        - red: a game_logic.Player instance attribute representing the red player.
+        - yellow: a game_logic.Player instance attribute representing the yellow player.
     """
     screen: pygame.Surface
     clock: pygame.time.Clock
     running: bool
+    red: game_logic.Player
+    yellow: game_logic.Player
 
-    def __init__(self, red, yellow) -> None:
+    def __init__(self, red: game_logic.Player, yellow: game_logic.Player) -> None:
         """Initialize AlignQuattroVisualization class.
 
         Preconditions:
-            - not start or (red is not None and yellow is not None) (if start is true, red and yellow exist)
+            - isinstance(red, game_logic.Player)
+            - isinstance(yellow, game_logic.Player)
         """
         pygame.init()
         self.screen = pygame.display.set_mode((1280, 720))
@@ -41,15 +45,15 @@ class AlignQuattroVisualization:
 
     def draw_board(self) -> None:
         """Draws an empty board"""
-        self.screen.fill("blue")
+        self.screen.fill(COLOR_DICTIONARY["blue"])
         circle_radius = 55
-        white = (255, 255, 255)
         for row in range(6):
             center_y = (row + 1) * (10 + circle_radius) + circle_radius * row
-            pygame.draw.line(self.screen, white, (32 + 175 * (row+1), 0), (32 + 175 * (row+1), 1280), 3)
+            pygame.draw.line(self.screen, COLOR_DICTIONARY["white"], (32 + 175 * (row + 1), 0),
+                             (32 + 175 * (row + 1), 1280), 3)
             for column in range(7):
                 center_x = (column + 1) * (65 + circle_radius) + circle_radius * column
-                pygame.draw.circle(self.screen, white, (center_x, center_y), circle_radius)
+                pygame.draw.circle(self.screen, COLOR_DICTIONARY["white"], (center_x, center_y), circle_radius)
         pygame.display.flip()
 
     def draw_circle(self, row: int, col: int, is_red: bool) -> None:
@@ -60,10 +64,9 @@ class AlignQuattroVisualization:
             - 0 <= col <= 6
         """
         if is_red:
-            color = (255, 0, 0)
+            color = COLOR_DICTIONARY["red"]
         else:
-            # color = (255, 255, 0)
-            color = (255,255,0)
+            color = COLOR_DICTIONARY["yellow"]
         circle_radius = 55
         center_y = (row + 1) * (10 + circle_radius) + circle_radius * row
         center_x = (col + 1) * (65 + circle_radius) + circle_radius * col
@@ -77,7 +80,7 @@ class AlignQuattroVisualization:
         player_str = "red"
         game_over = False
 
-        while self.running and game_over == False:
+        while self.running and not game_over:
             # if ai, don't wait for input
             if not isinstance(current_player, game_logic.HumanPlayerPygame):
                 col_input = current_player.make_move(game)
@@ -91,15 +94,15 @@ class AlignQuattroVisualization:
                 elif event.type == pygame.MOUSEBUTTONDOWN and isinstance(current_player, game_logic.HumanPlayerPygame):
                     # if human, wait for player to press a key
                     # if player clicks screen, then make a move
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        x = event.pos[0]
-                        col_input = math.floor((x-32) / 175)
-                        if col_input in game.get_available_columns():
-                            current_player, player_str = self.make_move(game, current_player, player_str, col_input)
+                    x = event.pos[0]
+                    col_input = math.floor((x - 32) / 175)
+                    if col_input in game.get_available_columns():
+                        current_player, player_str = self.make_move(game, current_player, player_str, col_input)
 
             if game.get_outcome() != "in progress":
                 font = pygame.font.Font('freesansbold.ttf', 32)
-                text = font.render(game.get_outcome(), True, (255, 0, 0), (255, 255, 0))
+                text = font.render(game.get_outcome(), True,
+                                   COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
                 text_rect = text.get_rect()
                 text_rect.center = (1280 // 2, 720 // 2)
                 self.screen.blit(text, text_rect)
@@ -110,7 +113,13 @@ class AlignQuattroVisualization:
             self.clock.tick(60)  # limits FPS to 60
         pygame.quit()
 
-    def make_move(self, game: game_logic.AlignQuattroGame, current_player: game_logic.Player, player_str: str, col_input: int) -> tuple:
+    def make_move(self, game: game_logic.AlignQuattroGame, current_player: game_logic.Player,
+                  player_str: str, col_input: int) -> tuple:
+        """Makes a move in the provided game and adjusts current player and player string accordingly.
+
+        Preconditions:
+            - -1 < col_input < 7
+        """
         row_input = game.get_row_from_available_columns(col_input)
         game.make_move(col_input)
         self.draw_circle(row_input, col_input, player_str == "red")
@@ -127,9 +136,9 @@ if __name__ == '__main__':
     import doctest
     doctest.testmod()
 
-    # import python_ta
-    # python_ta.check_all(config={
-    #     'max-line-length': 120,
-    #     'disable': ['static_type_checker'],
-    #     'extra-imports': []
-    # })
+    import python_ta
+    python_ta.check_all(config={
+        'max-line-length': 120,
+        'disable': ['static_type_checker'],
+        'extra-imports': ['math', 'pygame', 'game_logic']
+    })
