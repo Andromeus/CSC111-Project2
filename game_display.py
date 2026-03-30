@@ -13,6 +13,7 @@ COLOR_DICTIONARY = {"white": (255, 255, 255), "blue": (0, 0, 255), "red": (255, 
 GAME_STATES = {0: "menu", 1: "gameplay", 2: "data_visualization"}
 
 
+
 class AlignQuattroVisualization:
     """A class for representing an AlignQuattro game with pygame
 
@@ -33,6 +34,8 @@ class AlignQuattroVisualization:
     red: game_logic.Player
     yellow: game_logic.Player
     game_state: int
+    game: game_logic.AlignQuattroGame
+    fonts: dict[int: pygame.font]
 
     def __init__(self, red: game_logic.Player, yellow: game_logic.Player, g_state: int = 0) -> None:
         """Initialize AlignQuattroVisualization class.
@@ -45,51 +48,88 @@ class AlignQuattroVisualization:
         self.screen = pygame.display.set_mode((1280, 720))
         self.clock = pygame.time.Clock()
         self.running = True
-        self.draw_board()
         self.red = red
         self.yellow = yellow
         self.game_state = g_state
+        self.game = game_logic.AlignQuattroGame()
+        self.fonts = {0: pygame.font.Font('freesansbold.ttf', 32),
+                      1: pygame.font.Font('freesansbold.ttf', 64)}
+        self.draw_menu()
+        self.run_game_loop()
 
     def run_game_loop(self) -> None:
         """Runs the game loop to keep pygame up and running. Goes until the pygame window is closed."""
-        game = game_logic.AlignQuattroGame()
         current_player = self.red
         player_str = "red"
-        game_over = False
-
+        game_ongoing = True
 
         while self.running:
-            # if ai, don't wait for input
-            if not isinstance(current_player, game_logic.HumanPlayerPygame):
-                col_input = current_player.make_move(game)
-                current_player, player_str = self.make_move(game, current_player, player_str, col_input)
-
             # pygame.QUIT event means the user clicked X to close your window
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
                     # game over screen
-                elif event.type == pygame.MOUSEBUTTONDOWN and isinstance(current_player, game_logic.HumanPlayerPygame):
-                    # if human, wait for player to press a key
-                    # if player clicks screen, then make a move
-                    x = event.pos[0]
-                    col_input = math.floor((x - 32) / 175)
-                    if col_input in game.get_available_columns():
-                        current_player, player_str = self.make_move(game, current_player, player_str, col_input)
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if GAME_STATES[self.game_state] == "menu":
+                        self.start_new_game()  # needs to only be when mouse position is in a certain region
+                    elif (GAME_STATES[self.game_state] == "gameplay" and
+                          isinstance(current_player, game_logic.HumanPlayerPygame) and
+                          self.game.get_outcome() == "in progress"):
+                        x = event.pos[0]
+                        c_input = math.floor((x - 32) / 175)
+                        if c_input in self.game.get_available_columns():
+                            current_player, player_str = self.make_move(self.game, current_player, player_str, c_input)
+                    elif GAME_STATES[self.game_state] == "gameplay" and self.game.outcome != "in progress":
+                        self.game_state = 0  # return to menu when the game is finished
+                        self.draw_menu()
+                    elif GAME_STATES[self.game_state] == "data_visualization":
+                        pass
+                        # some sort of button to return to menu here
 
-            if game.get_outcome() != "in progress":
-                font = pygame.font.Font('freesansbold.ttf', 32)
-                text = font.render(game.get_outcome(), True,
-                                   COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
-                text_rect = text.get_rect()
-                text_rect.center = (1280 // 2, 720 // 2)
-                self.screen.blit(text, text_rect)
-                pygame.display.flip()
-                game_over = True
+            if GAME_STATES[self.game_state] == "menu":
+                upper_header = self.fonts[0].render("Welcome to ALIGNQUATTRO", True,
+                                               COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
+                upper_header_rect = upper_header.get_rect()
+                upper_header_rect.center = (1280 // 2, 50)
+                self.screen.blit(upper_header, upper_header_rect)
+                # need something for buttons here to choose next action
+            elif GAME_STATES[self.game_state] == "gameplay":
+                if not isinstance(current_player, game_logic.HumanPlayerPygame):
+                    col_input = current_player.make_move(self.game)
+                    current_player, player_str = self.make_move(self.game, current_player, player_str, col_input)
+                    pygame.event.clear(pygame.MOUSEBUTTONDOWN)
+                if self.game.get_outcome() != "in progress":
+                    font = self.fonts[0]
+                    text = font.render(f"{self.game.get_outcome()} Click anywhere to return to menu.", True,
+                                       COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
+                    text_rect = text.get_rect()
+                    text_rect.center = (1280 // 2, 720 // 2)
+                    self.screen.blit(text, text_rect)
+                    game_ongoing = False
+                else:
+                    game_ongoing = True
+            elif GAME_STATES[self.game_state] == "data_visualization":
+                pass
+            # Display plots and stuff here
 
             pygame.display.flip()
             self.clock.tick(60)  # limits FPS to 60
+        pygame.quit()
 
+    def draw_menu(self) -> None:
+        """Draws the main menu for AlignQuattro"""
+        self.screen.fill(COLOR_DICTIONARY["white"])
+        middle_header = self.fonts[0].render("Click anywhere to start", True,
+                                             COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
+        middle_header_rect = middle_header.get_rect()
+        middle_header_rect.center = (1280 // 2, 720 // 2)
+        self.screen.blit(middle_header, middle_header_rect)
+
+    def start_new_game(self) -> None:
+        """Starts a new game with the given red and yellow players, by creating a new game and switching game state."""
+        self.game = game_logic.AlignQuattroGame()
+        self.game_state = 1
+        self.draw_board()
 
     def draw_board(self) -> None:
         """Draws an empty board"""
@@ -120,45 +160,6 @@ class AlignQuattroVisualization:
         center_x = (col + 1) * (65 + circle_radius) + circle_radius * col
         pygame.draw.circle(self.screen, color, (center_x, center_y), circle_radius)
         pygame.display.flip()
-
-    def run_game(self) -> None:
-        """Runs the pygame while loop to run the game"""
-        game = game_logic.AlignQuattroGame()
-        current_player = self.red
-        player_str = "red"
-        game_over = False
-
-        while self.running and not game_over:
-            # if ai, don't wait for input
-            if not isinstance(current_player, game_logic.HumanPlayerPygame):0
-                col_input = current_player.make_move(game)
-                current_player, player_str = self.make_move(game, current_player, player_str, col_input)
-
-            # pygame.QUIT event means the user clicked X to close your window
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                    # game over screen
-                elif event.type == pygame.MOUSEBUTTONDOWN and isinstance(current_player, game_logic.HumanPlayerPygame):
-                    # if human, wait for player to press a key
-                    # if player clicks screen, then make a move
-                    x = event.pos[0]
-                    col_input = math.floor((x - 32) / 175)
-                    if col_input in game.get_available_columns():
-                        current_player, player_str = self.make_move(game, current_player, player_str, col_input)
-
-            if game.get_outcome() != "in progress":
-                font = pygame.font.Font('freesansbold.ttf', 32)
-                text = font.render(game.get_outcome(), True,
-                                   COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
-                text_rect = text.get_rect()
-                text_rect.center = (1280 // 2, 720 // 2)
-                self.screen.blit(text, text_rect)
-                pygame.display.flip()
-                game_over = True
-
-            pygame.display.flip()
-            self.clock.tick(60)  # limits FPS to 60
 
     def make_move(self, game: game_logic.AlignQuattroGame, current_player: game_logic.Player,
                   player_str: str, col_input: int) -> tuple:
