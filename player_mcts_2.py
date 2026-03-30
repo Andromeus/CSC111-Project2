@@ -8,21 +8,14 @@ This file contains the MCTS search logic for the AlignQuattro AI player. This in
 """
 
 from __future__ import annotations
-
 import math
 import random
-import copy
 from typing import Any
+import copy
 from dataclasses import dataclass, field
-
-import game_logic
 from game_logic import Player, AlignQuattroGame
 from mcts_dag import DAGNode, zobrist_hash, get_or_create_node
 
-
-################################################################################
-# Tree Node (used when is_dag=False)
-################################################################################
 
 @dataclass
 class _TreeNode:
