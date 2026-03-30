@@ -191,6 +191,14 @@ class AlignQuattroGame:
         """Returns True if it is currently red's turn, False if it is yellow's turn."""
         return self._is_red_move
 
+    def flip_turn(self) -> None:
+        """Flips whose turn it is without placing a piece.
+
+        Used by heuristic rollouts to simulate what the opponent would do
+        from the current board position without modifying any pieces.
+        """
+        self._is_red_move = not self._is_red_move
+
 
 class Piece:
     """A class representing a red/yellow/empty piece in an Align Quattro game.
