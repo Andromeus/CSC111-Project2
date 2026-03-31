@@ -63,6 +63,7 @@ class AlignQuattroVisualization:
                       1: pygame.font.Font('freesansbold.ttf', 64)}
 
     def start_game(self):
+        """Starts the game loop."""
         self.draw_menu()
         self.run_game_loop()
 
@@ -70,6 +71,8 @@ class AlignQuattroVisualization:
         """Runs the game loop to keep pygame up and running. Goes until the pygame window is closed."""
         current_player = self.red
         player_str = "red"
+        player_1_choice = 1
+        player_2_choice = 0
 
         while self.running:
             # pygame.QUIT event means the user clicked X to close your window
@@ -79,8 +82,6 @@ class AlignQuattroVisualization:
                     # game over screen
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if GAME_STATES[self.game_state] == "menu":
-                        player1Choice = 1
-                        player2Choice = 0
                         if RECTS["lower middle"].collidepoint(event.pos):
                             self.start_new_game()
                             current_player = self.red
@@ -88,10 +89,13 @@ class AlignQuattroVisualization:
                         elif RECTS["lower middle 2"].collidepoint(event.pos):
                             self.show_data()
                         elif RECTS["left"].collidepoint(event.pos):
-                            player1Choice += 1
-                            self.change_player_types(player1Choice, player2Choice)
+                            player_1_choice += 1
+                            self.change_player_types(player_1_choice, player_2_choice)
+                        elif RECTS["right"].collidepoint(event.pos):
+                            player_2_choice += 1
+                            self.change_player_types(player_1_choice, player_2_choice)
                     elif (GAME_STATES[self.game_state] == "gameplay" and
-                          isinstance(current_player, game_logic.HumanPlayerPygame) and
+                          isinstance(current_player, players.HumanPlayerPygame) and
                           self.game.get_outcome() == "in progress"):
                         x = event.pos[0]
                         c_input = math.floor((x - 32) / 175)
@@ -100,10 +104,10 @@ class AlignQuattroVisualization:
                                 self.game, current_player, player_str, c_input)
                     elif GAME_STATES[self.game_state] == "gameplay" and self.game.outcome != "in progress":
                         self.game_state = 0  # return to menu when the game is finished
-                        self.draw_menu()
+                        self.draw_menu(player_1_choice, player_2_choice)
                     elif GAME_STATES[self.game_state] == "data_visualization":
-                        pass
-                        # some sort of button to return to menu here
+                        self.game_state = 0  # return to menu when the game is finished
+                        self.draw_menu(player_1_choice, player_2_choice)
 
             if GAME_STATES[self.game_state] == "menu":
                 upper_header = self.fonts[1].render("Welcome to ALIGNQUATTRO",
@@ -113,7 +117,7 @@ class AlignQuattroVisualization:
                 self.screen.blit(upper_header, upper_header_rect)
                 # need something for buttons here to choose next action
             elif GAME_STATES[self.game_state] == "gameplay":
-                if (not isinstance(current_player, game_logic.HumanPlayerPygame) and
+                if (not isinstance(current_player, players.HumanPlayerPygame) and
                         self.game.get_outcome() == "in progress"):
                     col_input = current_player.make_move(self.game)
                     current_player, player_str = self.make_move(
@@ -134,8 +138,8 @@ class AlignQuattroVisualization:
             self.clock.tick(60)  # limits FPS to 60
         pygame.quit()
 
-    def draw_menu(self) -> None:
-        """Draws the main menu for AlignQuattro"""
+    def draw_menu(self, c1: int = 1, c2: int = 0) -> None:
+        """Draws the main menu for AlignQuattro, where c1 and c2 are the choices for players 1 and 2."""
         self.screen.fill(COLOR_DICTIONARY["biege"])
         middle_header = self.fonts[0].render("START", True,
                                              COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
@@ -147,15 +151,14 @@ class AlignQuattroVisualization:
         lower_header_rect = lower_header.get_rect()
         lower_header_rect.center = (1280 // 2, 540)
 
-        player1_choice_header = self.fonts[0].render("Human", True,
-                                            COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
+        player1_choice_header = self.fonts[0].render("Red Player", True, COLOR_DICTIONARY["red"])
         player1_choice_rect = player1_choice_header.get_rect()
-        player1_choice_rect.center = (1280 // 2 - 280, 440)
+        player1_choice_rect.center = (1280 // 2 - 280, 380)
 
-        player2_choice_header = self.fonts[0].render("Random", True,
-                                                     COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
+        player2_choice_header = self.fonts[0].render("Yellow Player", True, COLOR_DICTIONARY["red"])
         player2_choice_rect = player2_choice_header.get_rect()
-        player2_choice_rect.center = (1280 // 2 + 280, 440)
+        player2_choice_rect.center = (1280 // 2 + 280, 380)
+
 
         pygame.draw.rect(self.screen, COLOR_DICTIONARY["red"], RECTS["lower middle"],
                          0, 10, 10, 10, 10)
@@ -165,6 +168,7 @@ class AlignQuattroVisualization:
                          0, 10, 10, 10, 10)
         pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["right"],
                          0, 10, 10, 10, 10)
+        self.change_player_types(c1, c2)
         self.screen.blit(middle_header, middle_header_rect)
         self.screen.blit(lower_header, lower_header_rect)
         self.screen.blit(player1_choice_header, player1_choice_rect)
@@ -181,24 +185,55 @@ class AlignQuattroVisualization:
 
     def change_player_types(self, choice1: int, choice2: int) -> None:
         playerlist = ["random", "human", "mcts easy", "mcts medium", "mcts hard", "dag easy", "dag medium", "dag hard"]
-
-        if choice1 % 8 == 0:
-            self.red = players.RandomPlayer()
+        player_dict = {0: "Random", 1: "Human", 2: "Easy", 3: "Medium", 4: "Hard", 5: "Slooow"}
 
         message1 = playerlist[choice1 % 8]
         message2 = playerlist[choice2 % 8]
 
-        player1_choice_header = self.fonts[0].render(message1, True,
+        m1 = player_dict[choice1 % 6]
+        m2 = player_dict[choice2 % 6]
+
+        player1_choice_header = self.fonts[0].render(m1, True,
                                                      COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
         player1_choice_rect = player1_choice_header.get_rect()
         player1_choice_rect.center = (1280 // 2 - 280, 440)
 
-        player2_choice_header = self.fonts[0].render(message2, True,
+        player2_choice_header = self.fonts[0].render(m2, True,
                                                      COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
         player2_choice_rect = player2_choice_header.get_rect()
         player2_choice_rect.center = (1280 // 2 + 280, 440)
+        pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["left"],
+                         0, 10, 10, 10, 10)
+        pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["right"],
+                         0, 10, 10, 10, 10)
         self.screen.blit(player1_choice_header, player1_choice_rect)
         self.screen.blit(player2_choice_header, player2_choice_rect)
+
+        if choice1 % 6 == 0:
+            self.red = players.RandomPlayer()
+        elif choice1 % 6 == 1:
+            self.red = players.HumanPlayerPygame()
+        elif choice1 % 6 == 2:
+            self.red = player_mcts_2.MCTSPlayer(400)
+        elif choice1 % 6 == 3:
+            self.red = player_mcts_2.MCTSPlayer()
+        elif choice1 % 6 == 4:
+            self.red = player_mcts_2.MCTSPlayer(20000)
+        elif choice1 % 6 == 5:
+            self.red = player_mcts_2.MCTSPlayer(50000)
+        if choice2 % 6 == 0:
+            self.yellow = players.RandomPlayer()
+        elif choice2 % 6 == 1:
+            self.yellow = players.HumanPlayerPygame()
+        elif choice2 % 6 == 2:
+            self.yellow = player_mcts_2.MCTSPlayer(400)
+        elif choice2 % 6 == 3:
+            self.yellow = player_mcts_2.MCTSPlayer()
+        elif choice2 % 6 == 4:
+            self.yellow = player_mcts_2.MCTSPlayer(20000)
+        elif choice2 % 6 == 5:
+            self.yellow = player_mcts_2.MCTSPlayer(50000)
+
 
     def start_new_game(self) -> None:
         """Starts a new game with the given red and yellow players, by creating a new game and switching game state."""
@@ -261,6 +296,16 @@ class AlignQuattroVisualization:
     def show_data(self) -> None:
         """Display Data and switch to the data screen."""
         self.game_state = 2
+
+        self.screen.fill(COLOR_DICTIONARY["white"])
+
+        font = self.fonts[0]
+        text = font.render("Click anywhere to return to menu.", True,
+                           COLOR_DICTIONARY["blue"])
+        text_rect = text.get_rect()
+        text_rect.center = (1280 // 2, 720 // 2)
+        self.screen.blit(text, text_rect)
+
         # display graphs etc here
 
 
@@ -278,3 +323,4 @@ if __name__ == '__main__':
     red = players.HumanPlayerPygame()
     yellow = players.RandomPlayer()
     vis = AlignQuattroVisualization(red, yellow)
+    vis.start_game()
