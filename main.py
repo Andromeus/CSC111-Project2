@@ -40,7 +40,7 @@ def run_game_pygame() -> None:
     """
     Opens pygame version of alignquattro
     """
-    vis = game_display.AlignQuattroVisualization(player_mcts.MCTSPlayer(), player_mcts_2.MCTSPlayer())
+    vis = game_display.AlignQuattroVisualization(players.HumanPlayerPygame(), players.RandomPlayer())
     vis.start_game()
 
 
