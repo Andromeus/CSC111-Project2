@@ -12,8 +12,11 @@ import players
 import player_mcts
 import player_mcts_2
 
-COLOR_DICTIONARY = {"white": (255, 255, 255), "blue": (0, 0, 255), "red": (255, 0, 0), "yellow": (255, 255, 0)}
+COLOR_DICTIONARY = {"white": (255, 255, 255), "blue": (0, 0, 255), "red": (255, 0, 0), "yellow": (255, 255, 0),
+                    "biege": (255, 192, 103)}
 GAME_STATES = {0: "menu", 1: "gameplay", 2: "data_visualization"}
+RECTS = {"lower middle": pygame.Rect(
+    540, 400, 200, 80), "lower middle 2": pygame.Rect(540, 500, 200, 80)}
 
 
 class AlignQuattroVisualization:
@@ -66,7 +69,6 @@ class AlignQuattroVisualization:
         """Runs the game loop to keep pygame up and running. Goes until the pygame window is closed."""
         current_player = self.red
         player_str = "red"
-        game_ongoing = True
 
         while self.running:
             # pygame.QUIT event means the user clicked X to close your window
@@ -76,14 +78,20 @@ class AlignQuattroVisualization:
                     # game over screen
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if GAME_STATES[self.game_state] == "menu":
-                        self.start_new_game()  # needs to only be when mouse position is in a certain region
+                        if RECTS["lower middle"].collidepoint(event.pos):
+                            self.start_new_game()
+                            current_player = self.red
+                            player_str = "red"
+                        elif RECTS["lower middle 2"].collidepoint(event.pos):
+                            self.show_data()
                     elif (GAME_STATES[self.game_state] == "gameplay" and
                           isinstance(current_player, game_logic.HumanPlayerPygame) and
                           self.game.get_outcome() == "in progress"):
                         x = event.pos[0]
                         c_input = math.floor((x - 32) / 175)
                         if c_input in self.game.get_available_columns():
-                            current_player, player_str = self.make_move(self.game, current_player, player_str, c_input)
+                            current_player, player_str = self.make_move(
+                                self.game, current_player, player_str, c_input)
                     elif GAME_STATES[self.game_state] == "gameplay" and self.game.outcome != "in progress":
                         self.game_state = 0  # return to menu when the game is finished
                         self.draw_menu()
@@ -92,16 +100,18 @@ class AlignQuattroVisualization:
                         # some sort of button to return to menu here
 
             if GAME_STATES[self.game_state] == "menu":
-                upper_header = self.fonts[0].render("Welcome to ALIGNQUATTRO", True,
-                                               COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
+                upper_header = self.fonts[1].render("Welcome to ALIGNQUATTRO",
+                                                    True, COLOR_DICTIONARY["red"])
                 upper_header_rect = upper_header.get_rect()
                 upper_header_rect.center = (1280 // 2, 50)
                 self.screen.blit(upper_header, upper_header_rect)
                 # need something for buttons here to choose next action
             elif GAME_STATES[self.game_state] == "gameplay":
-                if not isinstance(current_player, game_logic.HumanPlayerPygame):
+                if (not isinstance(current_player, game_logic.HumanPlayerPygame) and
+                        self.game.get_outcome() == "in progress"):
                     col_input = current_player.make_move(self.game)
-                    current_player, player_str = self.make_move(self.game, current_player, player_str, col_input)
+                    current_player, player_str = self.make_move(
+                        self.game, current_player, player_str, col_input)
                     pygame.event.clear(pygame.MOUSEBUTTONDOWN)
                 if self.game.get_outcome() != "in progress":
                     font = self.fonts[0]
@@ -110,9 +120,6 @@ class AlignQuattroVisualization:
                     text_rect = text.get_rect()
                     text_rect.center = (1280 // 2, 720 // 2)
                     self.screen.blit(text, text_rect)
-                    game_ongoing = False
-                else:
-                    game_ongoing = True
             elif GAME_STATES[self.game_state] == "data_visualization":
                 pass
             # Display plots and stuff here
@@ -123,12 +130,33 @@ class AlignQuattroVisualization:
 
     def draw_menu(self) -> None:
         """Draws the main menu for AlignQuattro"""
-        self.screen.fill(COLOR_DICTIONARY["white"])
-        middle_header = self.fonts[0].render("Click anywhere to start", True,
-                                             COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
+
+        self.screen.fill(COLOR_DICTIONARY["biege"])
+        middle_header = self.fonts[0].render("START", True,
+                                             COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
         middle_header_rect = middle_header.get_rect()
-        middle_header_rect.center = (1280 // 2, 720 // 2)
+        middle_header_rect.center = (1280 // 2, 440)
+
+        lower_header = self.fonts[0].render("DATA", True,
+                                            COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
+        lower_header_rect = lower_header.get_rect()
+        lower_header_rect.center = (1280 // 2, 540)
+
+        pygame.draw.rect(self.screen, COLOR_DICTIONARY["red"], RECTS["lower middle"],
+                         0, 10, 10, 10, 10)
+        pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["lower middle 2"],
+                         0, 10, 10, 10, 10)
         self.screen.blit(middle_header, middle_header_rect)
+        self.screen.blit(lower_header, lower_header_rect)
+
+        for i in range(4):
+            circle_radius = 80
+            center_x = 340 + 200 * i
+            center_y = 250
+            pygame.draw.circle(
+                self.screen, COLOR_DICTIONARY["red"], (center_x, center_y), circle_radius)
+
+        pygame.display.flip()
 
     def start_new_game(self) -> None:
         """Starts a new game with the given red and yellow players, by creating a new game and switching game state."""
@@ -145,8 +173,10 @@ class AlignQuattroVisualization:
             pygame.draw.line(self.screen, COLOR_DICTIONARY["white"], (32 + 175 * (row + 1), 0),
                              (32 + 175 * (row + 1), 1280), 3)
             for column in range(7):
-                center_x = (column + 1) * (65 + circle_radius) + circle_radius * column
-                pygame.draw.circle(self.screen, COLOR_DICTIONARY["white"], (center_x, center_y), circle_radius)
+                center_x = (column + 1) * (65 + circle_radius) + \
+                    circle_radius * column
+                pygame.draw.circle(
+                    self.screen, COLOR_DICTIONARY["white"], (center_x, center_y), circle_radius)
         pygame.display.flip()
 
     def draw_circle(self, row: int, col: int, is_red: bool) -> None:
@@ -163,7 +193,8 @@ class AlignQuattroVisualization:
         circle_radius = 55
         center_y = (row + 1) * (10 + circle_radius) + circle_radius * row
         center_x = (col + 1) * (65 + circle_radius) + circle_radius * col
-        pygame.draw.circle(self.screen, color, (center_x, center_y), circle_radius)
+        pygame.draw.circle(self.screen, color,
+                           (center_x, center_y), circle_radius)
         pygame.display.flip()
 
     def make_move(self, game: game_logic.AlignQuattroGame, current_player: game_logic.Player,
@@ -184,14 +215,23 @@ class AlignQuattroVisualization:
             player_str = "red"
         return current_player, player_str
 
+    def show_data(self) -> None:
+        """Display Data and switch to the data screen."""
+        self.game_state = 2
+        # display graphs etc here
+
 
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
 
-    import python_ta
-    python_ta.check_all(config={
-        'max-line-length': 120,
-        'disable': ['static_type_checker'],
-        'extra-imports': ['math', 'pygame', 'game_logic']
-    })
+    # import python_ta
+    # python_ta.check_all(config={
+    #     'max-line-length': 120,
+    #     'disable': ['static_type_checker'],
+    #     'extra-imports': ['math', 'pygame', 'game_logic']
+    # })
+
+    red = game_logic.HumanPlayerPygame()
+    yellow = game_logic.RandomPlayer()
+    vis = AlignQuattroVisualization(red, yellow)
