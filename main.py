@@ -4,6 +4,8 @@ from sympy.series.limits import heuristics
 import game_logic
 import game_display
 import players
+import player_mcts
+import player_mcts_2
 
 
 def run_game_console(red: players.Player, yellow: players.Player) -> tuple[str, list[tuple[str, int, int]]]:
@@ -38,14 +40,15 @@ def run_game_pygame() -> None:
     """
     Opens pygame version of alignquattro
     """
-    vis = game_display.AlignQuattroVisualization()
+    vis = game_display.AlignQuattroVisualization(player_mcts.MCTSPlayer(), player_mcts_2.MCTSPlayer())
+    vis.start_game()
 
 
-def get_ai_info() -> players.Player:
-    aiChoice = input("Choose the AI type: random, MCTS, DAG \n")
-    while aiChoice.lower().strip() not in {"random", "mcts", "dag"}:
+def get_ai_info() -> players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer:
+    aiChoice = input("Choose the AI type: random, MCTS, DAG \n").lower().strip()
+    while aiChoice not in {"random", "mcts", "dag"}:
         print("invalid input")
-        aiChoice = input("Choose the AI type: random, MCTS, DAG \n")
+        aiChoice = input("Choose the AI type: random, MCTS, DAG \n").lower().strip()
     print("=" * 40)
     if aiChoice == "random":
         ai = players.RandomPlayer
@@ -54,27 +57,32 @@ def get_ai_info() -> players.Player:
             dag = False
         else:
             dag = True
-        difficulty = input("Choose difficulty — easy / medium / hard (default: medium): ").strip().lower()
-        sims = {'easy': 400, 'hard': 7000}.get(difficulty, 1600)
+        difficulty = input("Choose difficulty — easy / medium / hard / custom: ").strip().lower()
+        while difficulty not in {"easy", "medium", "hard", "custom"}:
+            print('invalid input')
+            difficulty = input("Choose difficulty — easy / medium / hard / custom: ").strip().lower()
+        if difficulty == "custom":
+            sims = input("How many cycles do you want to run?: ")
+            while not isinstance(sims, int):
+                print('invalid input')
+                sims = input("How many cycles do you want to run?: ")
+        else:
+            sims = {'easy': 400, 'hard': 7000}.get(difficulty, 1600)
         print("=" * 40)
         heuristics = input("Do you want heuristics? Y  |  N \n")
         while heuristics.strip().lower() not in {"y", "n"}:
             print("invalid input")
             heuristics = input("Do you want heuristics? Y  |  N \n")
         print("=" * 40)
-        if heuristics == "y":
-            ai = players.MCTSPlayerHeuristic(num_searches=sims, is_dag=dag)
+        if heuristics.lower().strip() == "y":
+            ai = player_mcts_2.MCTSPlayer(num_searches=sims, is_dag=dag)
         else:
-            ai = players.MCTSPlayer(num_searches=sims, is_dag=dag)
+            ai = player_mcts.MCTSPlayer(num_searches=sims, is_dag=dag)
     return ai
 
 
 def main() -> None:
     """Run an interactive game of AlignQuattro against the MCTS AI."""
-
-    print("=" * 40)
-    print("   Welcome to ALIGNQUATTRO (Connect 4)")
-    print("=" * 40)
     play_mode = input("Choose your visualization method: Console  |  Pygame \n")
     while play_mode.strip().lower() not in {"console", "pygame"}:
         print("Invalid Choice")
@@ -123,33 +131,43 @@ def main() -> None:
         print("It's a tie!")
 
 
-
-    # Tune num_searches for difficulty:
-    #   200  → easy/fast   (~50ms per AI move)
-    #   800  → medium      (~200ms per AI move)
-    #   2000 → hard        (~500ms per AI move)
-    difficulty = input("Choose difficulty — easy / medium / hard (default: medium): ").strip().lower()
-
-
-    colour = input("\nDo you want to go first? (yes / no, default: yes): ").strip().lower()
-
-    if colour == 'no':
-        print("\nAI goes first. Good luck!\n")
-
-    else:
-        print("\nYou go first. Good luck!\n")
-        outcome, _ = run_game_console(human, ai, visualization_type="text")
-        if outcome == 'red win':
-            print("You win! Well done.")
-        elif outcome == 'yellow win':
-            print("AI wins! Better luck next time.")
-        else:
-            print("It's a tie!")
+    # # Tune num_searches for difficulty:
+    # #   200  → easy/fast   (~50ms per AI move)
+    # #   800  → medium      (~200ms per AI move)
+    # #   2000 → hard        (~500ms per AI move)
+    # difficulty = input("Choose difficulty — easy / medium / hard (default: medium): ").strip().lower()
+    #
+    #
+    # colour = input("\nDo you want to go first? (yes / no, default: yes): ").strip().lower()
+    #
+    # if colour == 'no':
+    #     print("\nAI goes first. Good luck!\n")
+    #
+    # else:
+    #     print("\nYou go first. Good luck!\n")
+    #     outcome, _ = run_game_console(human, ai, visualization_type="text")
+    #     if outcome == 'red win':
+    #         print("You win! Well done.")
+    #     elif outcome == 'yellow win':
+    #         print("AI wins! Better luck next time.")
+    #     else:
+    #         print("It's a tie!")
 
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-    main()
+    running = True
+    print("=" * 40)
+    print("   Welcome to ALIGNQUATTRO (Connect 4)")
+    print("=" * 40)
+    while running:
+        main()
+        exit = input("Do you want to quit: Y  |  N \n")
+        while exit.lower().strip() not in {"y", "n"}:
+            print("invalid input")
+            exit = input("Do you want to quit: Y  |  N \n")
+        if exit == "y":
+            running = False
 
     # import python_ta
     # python_ta.check_all(config={

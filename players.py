@@ -3,6 +3,7 @@ import game_logic
 import player_mcts
 import player_mcts_2
 
+
 class Player:
     """ An abstract class representing a Align_Quattro Player.
 
@@ -44,6 +45,7 @@ class HumanPlayer(Player):
             choice = input("\nChoose a column, 1-7: ")
         return int(choice) - 1
 
+
 class HumanPlayerPygame(Player):
     """An AlignQuattro player which takes real human input to make human decided moves each turn.
 
@@ -52,11 +54,3 @@ class HumanPlayerPygame(Player):
     def make_move(self, game: game_logic.AlignQuattroGame) -> int:
         """Allow the pygame game loop to make moves instead of making a move directly."""
         pass
-
-class MCTSPlayer(Player):
-    def make_move(self, game: game_logic.AlignQuattroGame) -> int:
-        return player_mcts.MCTSPlayer.make_move(game)
-
-class MCTSPlayerHeuristic(Player):
-    def make_move(self, game: game_logic.AlignQuattroGame) -> int:
-        return player_mcts_2.MCTSPlayer.make_move(game)

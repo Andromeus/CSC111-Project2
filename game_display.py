@@ -8,10 +8,12 @@ import math
 
 import pygame
 import game_logic
+import players
+import player_mcts
+import player_mcts_2
 
 COLOR_DICTIONARY = {"white": (255, 255, 255), "blue": (0, 0, 255), "red": (255, 0, 0), "yellow": (255, 255, 0)}
 GAME_STATES = {0: "menu", 1: "gameplay", 2: "data_visualization"}
-
 
 
 class AlignQuattroVisualization:
@@ -35,9 +37,10 @@ class AlignQuattroVisualization:
     yellow: game_logic.Player
     game_state: int
     game: game_logic.AlignQuattroGame
-    fonts: dict[int: pygame.font]
+    fonts: dict[int, pygame.font]
 
-    def __init__(self, red: game_logic.Player, yellow: game_logic.Player, g_state: int = 0) -> None:
+    def __init__(self, red: players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer,
+                 yellow: players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer, g_state: int = 0) -> None:
         """Initialize AlignQuattroVisualization class.
 
         Preconditions:
@@ -54,6 +57,8 @@ class AlignQuattroVisualization:
         self.game = game_logic.AlignQuattroGame()
         self.fonts = {0: pygame.font.Font('freesansbold.ttf', 32),
                       1: pygame.font.Font('freesansbold.ttf', 64)}
+
+    def start_game(self):
         self.draw_menu()
         self.run_game_loop()
 
