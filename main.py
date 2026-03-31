@@ -1,4 +1,11 @@
-# main file, we can combine everything into here later
+"""CSC111 Project 2 ALIGNQUATTRO
+
+MAIN FILE
+
+Run this file to play a game of AlignQuattro against an MCTS Ai with difficulty of your choosing.
+
+Can choose between text visualization and pygame visualization.
+"""
 from sympy.series.limits import heuristics
 
 import game_logic
