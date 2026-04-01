@@ -1,10 +1,19 @@
-"""CSC111 Project 2 ALIGNQUATTRO
+"""CSC111 Winter 2026 Project 2: Interactive Main Program
 
-MAIN FILE
+Instructions
+===========
 
-Run this file to play a game of AlignQuattro against an MCTS Ai with difficulty of your choosing.
+Run this file to play a game of AlignQuattro against an MCTS Ai with difficulty of your choosing. You can choose
+between text visualization and pygame visualization modes.
 
-Can choose between text visualization and pygame visualization.
+Copyright and Usage Information
+===============================
+
+This file is the intellectual property of the AlignQuattro Team. It may not
+be copied, modified, distributed, or used without the permission of the
+authors.
+
+Copyright (c) 2026 AlignQuattro Team
 """
 
 import game_logic
