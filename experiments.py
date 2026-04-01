@@ -19,7 +19,7 @@ random.seed(42)
 baseline_model_search_counts = [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400]
 dag_vs_tree_model_search_counts = [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600]
 
-# Baseline model is the weak MCTS player with only 100 searches
+# Baseline model is the weak MCTS player with only 200 searches
 baseline_model_search_count = 200
 num_games = 20
 
@@ -31,7 +31,7 @@ def heuristics_vs_non_heuristics() -> None:
         (200, 30),  # Since there are less simulations/searches, we increase the iterations to account for variance
         (500, 24),
         (1000, 18),
-        (2000, 12), 
+        (2000, 12),
     ]
     total_games = sum(config[1] for config in configs) * 2
     total_wins = 0
@@ -62,7 +62,7 @@ def heuristics_vs_non_heuristics() -> None:
 def mcts_vs_baseline() -> None:
     """Run MCTS-vs-MCTS experiments and save the results to a CSV file.
 
-    The baseline player always uses 100 searches for the MCTS, while the search count of the tested player iterates 
+    The baseline player always uses 100 searches for the MCTS, while the search count of the tested player iterates
     over baseline_model_search_counts. For each simulation count, games are alternated by colour so that the
     tested player can play both sides. The results are written to experiments_against_baseline.csv.
     """
@@ -83,8 +83,8 @@ def mcts_vs_baseline() -> None:
             ties = 0
 
             for game_num in range(num_games):
-                strong_ai = player_mcts.MCTSPlayer(num_searches=searches, is_dag=True)
-                weak_ai = player_mcts.MCTSPlayer(num_searches=baseline_model_search_count, is_dag=True)
+                strong_ai = MCTSPlayer(num_searches=searches, is_dag=True)
+                weak_ai = MCTSPlayer(num_searches=baseline_model_search_count, is_dag=True)
 
                 # Alternate colours to reduce bias of the tested player
                 if game_num % 2 == 0:
@@ -109,7 +109,7 @@ def mcts_vs_baseline() -> None:
                 else:
                     strong_losses += 1
 
-            strong_win_rate = strong_wins / num_games
+            strong_win_rate = (strong_wins + ties * 0.5) / num_games
 
             writer.writerow([
                 searches,
@@ -151,12 +151,12 @@ def run_tree_vs_dag_experiments() -> None:
             ties = 0
 
             for game_num in range(num_games):
-                dag_ai = player_mcts.MCTSPlayer(
+                dag_ai = MCTSPlayer(
                     num_searches=searches,
                     is_dag=True
                 )
 
-                tree_ai = player_mcts.MCTSPlayer(
+                tree_ai = MCTSPlayer(
                     num_searches=searches,
                     is_dag=False
                 )
@@ -170,7 +170,7 @@ def run_tree_vs_dag_experiments() -> None:
                     yellow_player = dag_ai
                     dag_is_red = False
 
-                outcome, _ = game_logic.run_game(
+                outcome, _ = run_game(
                     red_player,
                     yellow_player,
                     visualization_type='none'
@@ -184,11 +184,11 @@ def run_tree_vs_dag_experiments() -> None:
                 else:
                     tree_wins += 1
 
-            dag_win_rate = dag_wins / num_games
+            dag_win_rate = (dag_wins + ties * 0.5) / num_games
 
             writer.writerow([
                 searches,
-                NUM_GAMES,
+                num_games,
                 dag_wins,
                 tree_wins,
                 ties,
