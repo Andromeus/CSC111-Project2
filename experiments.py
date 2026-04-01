@@ -173,7 +173,6 @@ def run_tree_vs_dag_experiments() -> None:
 def heuristics_vs_non_heuristics() -> None:
     """Experiment to measure whether the win rate advantage of heuristic rollouts over random rollouts is consistent across simulation counts"""
 
-    random.seed(42)
     configs = [
         (200, 30),  # Since there are less simulations/searches, we increase the iterations to account for variance
         (500, 24),
