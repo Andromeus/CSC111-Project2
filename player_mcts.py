@@ -42,7 +42,7 @@ class MCTSPlayer(Player):
     _transposition_table: dict
     _root: Any | None
 
-    def __init__(self, num_searches: int = 400, exploration_weight: float = math.sqrt(2), is_dag: bool = True, use_heuristics: bool = True) -> None:
+    def __init__(self, num_searches: int = 1600, exploration_weight: float = math.sqrt(2), is_dag: bool = True, use_heuristics: bool = True) -> None:
         """Initializes the MCTS player.
 
         Preconditions:
@@ -216,7 +216,7 @@ class MCTSPlayer(Player):
             1. If the current player can win immediately, take it
             2. If the opponent can win immediately, block it
         If self.use_heuristics is False, moves are chosen completely at random
-        
+
         The reward is calculated based on the perspective of the player at the root of the search, with
         1.0 for a root player win, 0.0 for a draw, and -1.0 if the root player loses.
 
@@ -229,7 +229,7 @@ class MCTSPlayer(Player):
         >>> reward in {-1.0, 0.0, 1.0}              # doctest: +SKIP
         True
         """
-        
+
         # We keep making moves until the game terminates
         while game.get_outcome() == "in progress":
             if self.use_heuristics:
@@ -237,7 +237,7 @@ class MCTSPlayer(Player):
             else:
                 move = random.choice(game.get_available_columns())
             game.make_move(move)
-            
+
         return self._reward_from_simulation(game.get_outcome(), root_is_red)
 
     def _would_win(self, game: AlignQuattroGame, col: int, as_red: bool) -> bool:
@@ -288,15 +288,15 @@ class MCTSPlayer(Player):
         for col in legal:
             if self._would_win(game, col, is_red):
                 return col
-        
+
         # Second pass: block first threat found
         for col in legal:
             if self._would_win(game, col, not is_red):
-                return col 
-                
+                return col
+
         return random.choice(legal)
 
-    
+
     def _backpropagate(self, path: list[Any], reward: float) -> None:
         """Update visit counts and value sums along the visited path.
 
