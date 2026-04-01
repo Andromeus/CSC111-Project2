@@ -26,7 +26,7 @@ from player_mcts import MCTSPlayer
 def mcts_vs_baseline() -> None:
     """Run MCTS-vs-MCTS experiments and save the results to a CSV file.
 
-    The baseline player always uses 100 searches for the MCTS, while the search count of the tested player iterates
+    The baseline player always uses 200 (or 500) searches for the MCTS, while the search count of the tested player iterates
     over baseline_model_search_counts. For each simulation count, games are alternated by colour so that the
     tested player can play both sides. The results are written to experiments_against_baseline.csv.
     """
