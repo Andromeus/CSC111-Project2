@@ -1,11 +1,19 @@
 """CSC111 Project 2 ALIGNQUATTRO
 
-EXPERIMENT FILE
+Experiment File
 
 This file contains experiments to measure and compare the strength of different
-AlignQuattro AI configurations. This includes:
+AlignQuattro AI model configurations. This includes:
     - heuristics_vs_non_heuristics: measures whether the win rate advantage of
       heuristic rollouts over random rollouts grows as the number of simulations increases,
+      by running 20 games at each simulation count with alternating colors to cancel
+      out the first-move advantage
+    - mcts_vs_baseline(): measures whether the win rate of an MCTS model with more searches against
+      a baseline MCTS model with a fixed number of searches increases, as the number of searches of 
+      the stronger model is varied. This is achieved by running 20 games at each simulation count 
+      with alternating colors to cancel out the first-move advantage
+    - run_tree_vs_dag_experiments(): measures whether the win rate advantage of the
+      DAG MCTS rollouts over Tree MCTS rollouts grows as the number of simulations increases,
       by running 20 games at each simulation count with alternating colors to cancel
       out the first-move advantage
 """
@@ -18,7 +26,7 @@ from player_mcts import MCTSPlayer
 def mcts_vs_baseline() -> None:
     """Run MCTS-vs-MCTS experiments and save the results to a CSV file.
 
-    The baseline player always uses 100 searches for the MCTS, while the search count of the tested player iterates
+    The baseline player always uses 200 (or 500) searches for the MCTS, while the search count of the tested player iterates
     over baseline_model_search_counts. For each simulation count, games are alternated by colour so that the
     tested player can play both sides. The results are written to experiments_against_baseline.csv.
     """
@@ -171,9 +179,8 @@ def run_tree_vs_dag_experiments() -> None:
 
 
 def heuristics_vs_non_heuristics() -> None:
-    """Does the heuristic advantage grow with more simulations?"""
+    """Experiment to measure whether the win rate advantage of heuristic rollouts over random rollouts is consistent across simulation counts"""
 
-    random.seed(42)
     configs = [
         (200, 30),  # Since there are less simulations/searches, we increase the iterations to account for variance
         (500, 24),
