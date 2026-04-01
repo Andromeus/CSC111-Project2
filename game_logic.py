@@ -328,7 +328,7 @@ class Player:
     This class can be subclassed to implement different strategies for playing AlignQuattro.
     """
 
-    def make_move(self, game: AlignQuattroGame) -> int:
+    def make_move(self, game: AlignQuattroGame) -> int | None:
         """Make a move given the current game.
 
         Preconditions:
@@ -374,9 +374,8 @@ class HumanPlayerPygame(Player):
 
     Uses pygame mouse input to make moves based on the column clicked.
     """
-    def make_move(self, game: AlignQuattroGame) -> int:
+    def make_move(self, game: AlignQuattroGame) -> None:
         """Allow the pygame game loop to make moves instead of making a move directly."""
-        pass
 
 ################################################################################
 # Functions for running games
