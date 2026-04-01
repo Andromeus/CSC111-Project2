@@ -4,10 +4,10 @@ EXPERIMENT FILE
 
 This file contains experiments to measure and compare the strength of different
 AlignQuattro AI configurations. This includes:
-    - heuristics_vs_non_heuristics: measures whether the win rate advantage of
-      heuristic rollouts over random rollouts grows as the number of simulations increases,
-      by running 20 games at each simulation count with alternating colors to cancel
-      out the first-move advantage
+    - heuristics_vs_non_heuristics: measures whether the win rate advantage of heuristic rollouts over random rollouts
+    is consistent across simulation counts, by running a decreasing number of games
+    as simulations increase (30, 24, 18, 12) to account for reduced variance at higher
+    simulation counts, with alternating colours to cancel out the first-move advantage
 """
 import random
 import csv
