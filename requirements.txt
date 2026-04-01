@@ -1,3 +1,7 @@
-"""Requirements for running Align Quattro."""
+# CSC111 Winter 2026: Requirements for running Align Quattro.
+
+# Testing and code checking
 python-ta
+
+# Graphics and data visualization
 pygame
