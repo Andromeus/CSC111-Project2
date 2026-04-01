@@ -28,6 +28,20 @@ import game_logic
 ################################################################################
 # Zobrist Hashing
 ################################################################################
+# Note: We do not want the transposition table to be regenerated every time zobrist_hash(game) is called. Hence, we
+#   are using global variables to account for that.
+# Map each piece type to an index for the Zobrist table
+_PIECE_INDEX = {'empty': 0, 'red': 1, 'yellow': 2}
+# Pre-generate a random 64-bit integer for every (row, col, piece_type) triple.
+# The hash of a board is the XOR of all matching entries.
+_ZOBRIST_TABLE: list[list[list[int]]] = [
+    [
+        [random.getrandbits(64) for _ in range(3)]  # one entry per piece type
+        for _ in range(7)  # 7 columns
+    ]
+    for _ in range(6)  # 6 rows
+]
+
 
 def zobrist_hash(game: game_logic.AlignQuattroGame) -> int:
     """Return a 64-bit integer uniquely identifying the board state of the given game.
@@ -45,18 +59,6 @@ def zobrist_hash(game: game_logic.AlignQuattroGame) -> int:
     >>> h1 == h2  # same empty board → same hash
     True
     """
-    # Map each piece type to an index for the Zobrist table
-    _PIECE_INDEX = {'empty': 0, 'red': 1, 'yellow': 2}
-    # Pre-generate a random 64-bit integer for every (row, col, piece_type) triple.
-    # The hash of a board is the XOR of all matching entries.
-    _ZOBRIST_TABLE: list[list[list[int]]] = [
-        [
-            [random.getrandbits(64) for _ in range(3)]  # one entry per piece type
-            for _ in range(7)  # 7 columns
-        ]
-        for _ in range(6)  # 6 rows
-    ]
-
     board = game.get_board()
     h = 0
     for r in range(6):
@@ -181,3 +183,17 @@ def get_or_create_node(
     if board_hash not in table:
         table[board_hash] = DAGNode()
     return table[board_hash]
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
+
+    import python_ta
+    python_ta.check_all(config={
+        'extra-imports': [
+            'random', 'math', 'game_logic'
+        ],
+        'allowed-io': [],
+        'max-line-length': 120
+    })

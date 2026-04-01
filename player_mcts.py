@@ -276,10 +276,12 @@ class MCTSPlayer(Player):
         board[row][col].set_piece_type(player)
 
         # Check all four directions for a win
-        won = game.check_direction_win(row, col, 'horizontal', player) or \
-              game.check_direction_win(row, col, 'vertical', player) or \
-              game.check_direction_win(row, col, 'positive diagonal', player) or \
-              game.check_direction_win(row, col, 'negative diagonal', player)
+        won = (
+            game.check_direction_win(row, col, 'horizontal', player)
+            or game.check_direction_win(row, col, 'vertical', player)
+            or game.check_direction_win(row, col, 'positive diagonal', player)
+            or game.check_direction_win(row, col, 'negative diagonal', player)
+        )
 
         # Restore the board — no copy needed
         board[row][col].set_piece_type('empty')
@@ -314,7 +316,6 @@ class MCTSPlayer(Player):
                 return col
 
         return random.choice(legal)
-
 
     def _backpropagate(self, path: list[Any], reward: float) -> None:
         """Update visit counts and value sums along the visited path.

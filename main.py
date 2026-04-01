@@ -161,6 +161,7 @@ def main() -> None:
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+    # If you want to check python_ta, comment out the run game lines and while loop
     running = True
     print("=" * 40)
     print("   Welcome to ALIGNQUATTRO (Connect 4)")

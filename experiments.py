@@ -36,8 +36,8 @@ from player_mcts import MCTSPlayer
 def mcts_vs_baseline() -> None:
     """Run MCTS-vs-MCTS experiments and save the results to a CSV file.
 
-    The baseline player always uses 200 (or 500) searches for the MCTS, while the search count of the tested player iterates
-    over baseline_model_search_counts. For each simulation count, games are alternated by colour so that the
+    The baseline player always uses 200 (or 500) searches for the MCTS, while the search count of the tested player
+    iterates over baseline_model_search_counts. For each simulation count, games are alternated by colour so that the
     tested player can play both sides. The results are written to experiments_against_baseline.csv.
     """
     baseline_model_search_counts = [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400]
@@ -189,7 +189,9 @@ def run_tree_vs_dag_experiments() -> None:
 
 
 def heuristics_vs_non_heuristics() -> None:
-    """Experiment to measure whether the win rate advantage of heuristic rollouts over random rollouts is consistent across simulation counts"""
+    """Experiment to measure whether the win rate advantage of heuristic rollouts over random rollouts is consistent
+    across simulation counts.
+    """
 
     configs = [
         (200, 30),  # Since there are less simulations/searches, we increase the iterations to account for variance

@@ -18,9 +18,7 @@ expressly prohibited.
 This file is Copyright (c) 2026 AlignQuattro Team
 """
 import math
-
 import pygame
-
 import game_logic
 import player_mcts
 
