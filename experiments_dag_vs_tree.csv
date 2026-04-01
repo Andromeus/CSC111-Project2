@@ -8,3 +8,4 @@ search_count,games_played,dag_wins,tree_wins,ties,dag_win_rate
 1200,20,12,8,0,0.6
 1400,20,8,7,5,0.525
 1600,20,10,10,0,0.5
+3000,20,13,6,1,0.675
