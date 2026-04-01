@@ -124,11 +124,11 @@ def main() -> None:
     elif gamemode in {"human vs ai", "ai vs human"}:
         print("You are playing Human vs AI")
         print("=" * 40)
-        ai = get_ai_info()
         go_first = input("Do you want to go first? Y  |  N \n")
         while go_first.lower().strip() not in {"y", "n"}:
             print("invalid input")
             go_first = input("Do you want to go first? Y  |  N \n")
+        ai = get_ai_info()
         if go_first == "y":
             outcome, _ = run_game_console(game_logic.HumanPlayer(), ai)
             print("\nYou are RED  (R)   |   AI is YELLOW  (Y)")
