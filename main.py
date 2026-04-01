@@ -114,12 +114,12 @@ def main() -> None:
     while play_mode.strip().lower() not in {"console", "pygame"}:
         print("Invalid Choice")
         play_mode = input("Choose how you want to play: Console  |  Pygame \n")
-    if play_mode == "pygame":
+    if play_mode.strip().lower() == "pygame":
         run_game_pygame()
     print("=" * 40)
 
-    gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n")
-    while gamemode.strip().lower() not in {"ai vs ai", "human vs ai", "ai vs human", "human vs human"}:
+    gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n").strip().lower()
+    while gamemode not in {"ai vs ai", "human vs ai", "ai vs human", "human vs human"}:
         print("Invalid choice")
         gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n")
 
