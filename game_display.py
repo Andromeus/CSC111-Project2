@@ -228,7 +228,7 @@ class AlignQuattroVisualization:
         player_dict = {0: "Random", 1: "Human", 2: "MCTS Agent"}
         num_options = len(player_dict)
         message = player_dict[choice % num_options]
-        difficulty_dictionary = {0: 400, 1: 1600, 2: 20000, 3: 50000}
+        difficulty_dictionary = {0: 400, 1: 1600, 2: 10000, 3: 50000}
 
         if is_left:
             xpos = 1280 // 2 - 280
