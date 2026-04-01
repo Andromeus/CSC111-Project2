@@ -8,16 +8,14 @@ import math
 
 import pygame
 import game_logic
-import players
 import player_mcts
-import player_mcts_2
 
 COLOR_DICTIONARY = {"white": (255, 255, 255), "blue": (0, 0, 255), "red": (255, 0, 0), "yellow": (255, 255, 0),
                     "biege": (255, 192, 103)}
 GAME_STATES = {0: "menu", 1: "gameplay", 2: "data_visualization"}
 RECTS = {"lower middle": pygame.Rect(
     540, 400, 200, 80), "lower middle 2": pygame.Rect(540, 500, 200, 80),
-    "right": pygame.Rect(820, 400, 200, 80), "left": pygame.Rect(260, 400, 200, 80)}
+    "right": pygame.Rect(770, 400, 400, 80), "left": pygame.Rect(110, 400, 400, 80)}
 
 
 class AlignQuattroVisualization:
@@ -37,14 +35,14 @@ class AlignQuattroVisualization:
     screen: pygame.Surface
     clock: pygame.time.Clock
     running: bool
-    red: players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer
-    yellow: players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer
+    red: game_logic.Player | player_mcts.MCTSPlayer
+    yellow: game_logic.Player | player_mcts.MCTSPlayer
     game_state: int
     game: game_logic.AlignQuattroGame
     fonts: dict[int, pygame.font]
 
-    def __init__(self, red: players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer,
-                 yellow: players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer, g_state: int = 0) -> None:
+    def __init__(self, red: game_logic.Player | player_mcts.MCTSPlayer,
+                 yellow: game_logic.Player | player_mcts.MCTSPlayer, g_state: int = 0) -> None:
         """Initialize AlignQuattroVisualization class.
 
         Preconditions:
@@ -63,7 +61,7 @@ class AlignQuattroVisualization:
                       1: pygame.font.Font('freesansbold.ttf', 64)}
 
     def start_game(self):
-        """Starts the game loop."""
+        """Starts the game loop and draws the starting menu."""
         self.draw_menu()
         self.run_game_loop()
 
@@ -95,7 +93,7 @@ class AlignQuattroVisualization:
                             player_2_choice += 1
                             self.change_player_types(player_1_choice, player_2_choice)
                     elif (GAME_STATES[self.game_state] == "gameplay" and
-                          isinstance(current_player, players.HumanPlayerPygame) and
+                          isinstance(current_player, game_logic.HumanPlayerPygame) and
                           self.game.get_outcome() == "in progress"):
                         x = event.pos[0]
                         c_input = math.floor((x - 32) / 175)
@@ -117,7 +115,7 @@ class AlignQuattroVisualization:
                 self.screen.blit(upper_header, upper_header_rect)
                 # need something for buttons here to choose next action
             elif GAME_STATES[self.game_state] == "gameplay":
-                if (not isinstance(current_player, players.HumanPlayerPygame) and
+                if (not isinstance(current_player, game_logic.HumanPlayerPygame) and
                         self.game.get_outcome() == "in progress"):
                     col_input = current_player.make_move(self.game)
                     current_player, player_str = self.make_move(
@@ -153,12 +151,11 @@ class AlignQuattroVisualization:
 
         player1_choice_header = self.fonts[0].render("Red Player", True, COLOR_DICTIONARY["red"])
         player1_choice_rect = player1_choice_header.get_rect()
-        player1_choice_rect.center = (1280 // 2 - 280, 380)
+        player1_choice_rect.center = (1280 // 2 - 330, 380)
 
         player2_choice_header = self.fonts[0].render("Yellow Player", True, COLOR_DICTIONARY["red"])
         player2_choice_rect = player2_choice_header.get_rect()
-        player2_choice_rect.center = (1280 // 2 + 280, 380)
-
+        player2_choice_rect.center = (1280 // 2 + 330, 380)
 
         pygame.draw.rect(self.screen, COLOR_DICTIONARY["red"], RECTS["lower middle"],
                          0, 10, 10, 10, 10)
@@ -184,56 +181,127 @@ class AlignQuattroVisualization:
         pygame.display.flip()
 
     def change_player_types(self, choice1: int, choice2: int) -> None:
-        playerlist = ["random", "human", "mcts easy", "mcts medium", "mcts hard", "dag easy", "dag medium", "dag hard"]
-        player_dict = {0: "Random", 1: "Human", 2: "Easy", 3: "Medium", 4: "Hard", 5: "Slooow"}
+        """
+        Displays which type each player is on their buttons and modifies each player to fit the types displayed.
+        The type is changed when the button is clicked
+        """
+        player_dict = {0: "Random", 1: "Human", 2: "MCTS Easy", 3: "MCTS Medium", 4: "MCTS Hard", 5: "MCTS Slooow",
+                       6: "MCTS Easy Heuristic", 7: "MCTS Medium Heuristic", 8: "MCTS Hard Heuristic",
+                       9: "MCTS Slooow Heuristic",
+                       10: "DAG Easy", 11: "DAG Medium", 12: "DAG Hard", 13: "DAG Slooow",
+                       14: "DAG Easy Heuristic", 15: "DAG Medium Heuristic", 16: "DAG Hard Heuristic",
+                       17: "DAG Slooow Heuristic"}
 
-        message1 = playerlist[choice1 % 8]
-        message2 = playerlist[choice2 % 8]
-
-        m1 = player_dict[choice1 % 6]
-        m2 = player_dict[choice2 % 6]
+        m1 = player_dict[choice1 % 18]
+        m2 = player_dict[choice2 % 18]
 
         player1_choice_header = self.fonts[0].render(m1, True,
                                                      COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
         player1_choice_rect = player1_choice_header.get_rect()
-        player1_choice_rect.center = (1280 // 2 - 280, 440)
+        player1_choice_rect.center = (1280 // 2 - 330, 440)
 
         player2_choice_header = self.fonts[0].render(m2, True,
                                                      COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
         player2_choice_rect = player2_choice_header.get_rect()
-        player2_choice_rect.center = (1280 // 2 + 280, 440)
+        player2_choice_rect.center = (1280 // 2 + 330, 440)
         pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["left"],
                          0, 10, 10, 10, 10)
         pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["right"],
                          0, 10, 10, 10, 10)
         self.screen.blit(player1_choice_header, player1_choice_rect)
         self.screen.blit(player2_choice_header, player2_choice_rect)
+        self.change_role("red", choice1)
+        self.change_role("yellow", choice2)
 
-        if choice1 % 6 == 0:
-            self.red = players.RandomPlayer()
-        elif choice1 % 6 == 1:
-            self.red = players.HumanPlayerPygame()
-        elif choice1 % 6 == 2:
-            self.red = player_mcts_2.MCTSPlayer(400)
-        elif choice1 % 6 == 3:
-            self.red = player_mcts_2.MCTSPlayer()
-        elif choice1 % 6 == 4:
-            self.red = player_mcts_2.MCTSPlayer(20000)
-        elif choice1 % 6 == 5:
-            self.red = player_mcts_2.MCTSPlayer(50000)
-        if choice2 % 6 == 0:
-            self.yellow = players.RandomPlayer()
-        elif choice2 % 6 == 1:
-            self.yellow = players.HumanPlayerPygame()
-        elif choice2 % 6 == 2:
-            self.yellow = player_mcts_2.MCTSPlayer(400)
-        elif choice2 % 6 == 3:
-            self.yellow = player_mcts_2.MCTSPlayer()
-        elif choice2 % 6 == 4:
-            self.yellow = player_mcts_2.MCTSPlayer(20000)
-        elif choice2 % 6 == 5:
-            self.yellow = player_mcts_2.MCTSPlayer(50000)
+    def change_role(self, player: str, choice: int) -> None:
+        """
+        Changes the type based on player as well as the choice displayed on the button
+        """
 
+        if player == "red":
+            if choice % 18 == 0:
+                self.red = game_logic.RandomPlayer()
+            elif choice % 18 == 1:
+
+                self.red = game_logic.HumanPlayerPygame()
+            elif choice % 18 == 2:
+
+                self.red = player_mcts.MCTSPlayer(400, is_dag=False, use_heuristics=False)
+            elif choice % 18 == 3:
+                self.red = player_mcts.MCTSPlayer(is_dag=False, use_heuristics=False)
+            elif choice % 18 == 4:
+                self.red = player_mcts.MCTSPlayer(20000, is_dag=False, use_heuristics=False)
+            elif choice % 18 == 5:
+                self.red = player_mcts.MCTSPlayer(50000, is_dag=False, use_heuristics=False)
+
+            elif choice % 18 == 6:
+                self.red = player_mcts.MCTSPlayer(400, is_dag=False, use_heuristics=True)
+            elif choice % 18 == 7:
+                self.red = player_mcts.MCTSPlayer(is_dag=False, use_heuristics=True)
+            elif choice % 18 == 8:
+                self.red = player_mcts.MCTSPlayer(20000, is_dag=False, use_heuristics=True)
+            elif choice % 18 == 9:
+                self.red = player_mcts.MCTSPlayer(50000, is_dag=False, use_heuristics=True)
+
+            elif choice % 18 == 10:
+                self.red = player_mcts.MCTSPlayer(400, is_dag=True, use_heuristics=False)
+            elif choice % 18 == 11:
+                self.red = player_mcts.MCTSPlayer(is_dag=True, use_heuristics=False)
+            elif choice % 18 == 12:
+                self.red = player_mcts.MCTSPlayer(20000, is_dag=True, use_heuristics=False)
+            elif choice % 18 == 13:
+                self.red = player_mcts.MCTSPlayer(50000, is_dag=True, use_heuristics=False)
+
+            elif choice % 18 == 14:
+                self.red = player_mcts.MCTSPlayer(400, is_dag=True, use_heuristics=True)
+            elif choice % 18 == 15:
+                self.red = player_mcts.MCTSPlayer(is_dag=True, use_heuristics=True)
+            elif choice % 18 == 16:
+                self.red = player_mcts.MCTSPlayer(20000, is_dag=True, use_heuristics=True)
+            elif choice % 18 == 17:
+                self.red = player_mcts.MCTSPlayer(50000, is_dag=True, use_heuristics=True)
+        else:
+            if choice % 18 == 0:
+                self.yellow = game_logic.RandomPlayer()
+            elif choice % 18 == 1:
+
+                self.yellow = game_logic.HumanPlayerPygame()
+            elif choice % 18 == 2:
+
+                self.yellow = player_mcts.MCTSPlayer(400, is_dag=False, use_heuristics=False)
+            elif choice % 18 == 3:
+                self.yellow = player_mcts.MCTSPlayer(is_dag=False, use_heuristics=False)
+            elif choice % 18 == 4:
+                self.yellow = player_mcts.MCTSPlayer(20000, is_dag=False, use_heuristics=False)
+            elif choice % 18 == 5:
+                self.yellow = player_mcts.MCTSPlayer(50000, is_dag=False, use_heuristics=False)
+
+            elif choice % 18 == 6:
+                self.yellow = player_mcts.MCTSPlayer(400, is_dag=False, use_heuristics=True)
+            elif choice % 18 == 7:
+                self.yellow = player_mcts.MCTSPlayer(is_dag=False, use_heuristics=True)
+            elif choice % 18 == 8:
+                self.yellow = player_mcts.MCTSPlayer(20000, is_dag=False, use_heuristics=True)
+            elif choice % 18 == 9:
+                self.yellow = player_mcts.MCTSPlayer(50000, is_dag=False, use_heuristics=True)
+
+            elif choice % 18 == 10:
+                self.yellow = player_mcts.MCTSPlayer(400, is_dag=True, use_heuristics=False)
+            elif choice % 18 == 11:
+                self.yellow = player_mcts.MCTSPlayer(is_dag=True, use_heuristics=False)
+            elif choice % 18 == 12:
+                self.yellow = player_mcts.MCTSPlayer(20000, is_dag=True, use_heuristics=False)
+            elif choice % 18 == 13:
+                self.yellow = player_mcts.MCTSPlayer(50000, is_dag=True, use_heuristics=False)
+
+            elif choice % 18 == 14:
+                self.yellow = player_mcts.MCTSPlayer(400, is_dag=True, use_heuristics=True)
+            elif choice % 18 == 15:
+                self.yellow = player_mcts.MCTSPlayer(is_dag=True, use_heuristics=True)
+            elif choice % 18 == 16:
+                self.yellow = player_mcts.MCTSPlayer(20000, is_dag=True, use_heuristics=True)
+            elif choice % 18 == 17:
+                self.yellow = player_mcts.MCTSPlayer(50000, is_dag=True, use_heuristics=True)
 
     def start_new_game(self) -> None:
         """Starts a new game with the given red and yellow players, by creating a new game and switching game state."""
@@ -275,7 +343,7 @@ class AlignQuattroVisualization:
         pygame.display.flip()
 
     def make_move(self, game: game_logic.AlignQuattroGame,
-                  current_player: players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer,
+                  current_player: game_logic.Player | player_mcts.MCTSPlayer,
                   player_str: str, col_input: int) -> tuple:
         """Makes a move in the provided game and adjusts current player and player string accordingly.
 
@@ -320,7 +388,7 @@ if __name__ == '__main__':
     #     'extra-imports': ['math', 'pygame', 'game_logic']
     # })
 
-    red = players.HumanPlayerPygame()
-    yellow = players.RandomPlayer()
+    red = game_logic.HumanPlayerPygame()
+    yellow = game_logic.RandomPlayer()
     vis = AlignQuattroVisualization(red, yellow)
     vis.start_game()

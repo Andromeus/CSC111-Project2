@@ -1,7 +1,5 @@
 import random
 import game_logic
-import player_mcts
-import player_mcts_2
 
 
 class Player:

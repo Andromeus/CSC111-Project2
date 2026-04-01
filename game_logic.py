@@ -370,7 +370,7 @@ class HumanPlayer(Player):
 
 
 class HumanPlayerPygame(Player):
-    """An AlignQuattro player which takes real human input to make human decided moves each turn.
+    """An AlignQuattro player which takes real human input in pygame to make human decided moves each turn.
 
     Uses pygame mouse input to make moves based on the column clicked.
     """
@@ -415,8 +415,7 @@ def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> t
 
     move_sequence = []
     current_player = red
-    player_str = "red"
-    row_input, col_input = -1, -1
+
     while game.get_outcome() == "in progress":
         if visualization_type == "text":
             print_simple_visual(game.get_board())
