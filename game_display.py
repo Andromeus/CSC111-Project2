@@ -7,7 +7,6 @@ This file is for running pygame and visualizing our project.
 import math
 
 import pygame
-from mypyc.primitives.registry import custom_op
 
 import game_logic
 import player_mcts
@@ -43,10 +42,9 @@ class AlignQuattroVisualization:
     yellow: game_logic.Player | player_mcts.MCTSPlayer
     game_state: int
     game: game_logic.AlignQuattroGame
-    # fonts: dict[int, pygame.font]
 
-    def __init__(self, red: game_logic.Player | player_mcts.MCTSPlayer,
-                 yellow: game_logic.Player | player_mcts.MCTSPlayer, g_state: int = 0) -> None:
+    def __init__(self, red_player: game_logic.Player | player_mcts.MCTSPlayer,
+                 yellow_player: game_logic.Player | player_mcts.MCTSPlayer, g_state: int = 0) -> None:
         """Initialize AlignQuattroVisualization class.
 
         Preconditions:
@@ -57,14 +55,12 @@ class AlignQuattroVisualization:
         self.screen = pygame.display.set_mode((1280, 720))
         self.clock = pygame.time.Clock()
         self.running = True
-        self.red = red
-        self.yellow = yellow
+        self.red = red_player
+        self.yellow = yellow_player
         self.game_state = g_state
         self.game = game_logic.AlignQuattroGame()
-        self.fonts = {0: pygame.font.Font('freesansbold.ttf', 32),
-                      1: pygame.font.Font('freesansbold.ttf', 64)}
 
-    def start_game(self):
+    def start_game(self) -> None:
         """Starts the game loop."""
         self.draw_menu()
         self.run_game_loop()
@@ -128,9 +124,9 @@ class AlignQuattroVisualization:
                             yel_heuristic = not yel_heuristic
                             self.change_player_types(False, player_2_choice, yel_dif, yel_dag, yel_heuristic)
                             self.type_customization_text(False, yel_dif, yel_dag, yel_heuristic)
-                    elif (GAME_STATES[self.game_state] == "gameplay" and
-                          isinstance(current_player, game_logic.HumanPlayerPygame) and
-                          self.game.get_outcome() == "in progress"):
+                    elif (GAME_STATES[self.game_state] == "gameplay"
+                          and isinstance(current_player, game_logic.HumanPlayerPygame)
+                          and self.game.get_outcome() == "in progress"):
                         x = event.pos[0]
                         c_input = math.floor((x - 32) / 175)
                         if c_input in self.game.get_available_columns():
@@ -146,21 +142,20 @@ class AlignQuattroVisualization:
                                        yel_dag, red_heuristic, yel_heuristic)
 
             if GAME_STATES[self.game_state] == "menu":
-                upper_header = self.fonts[1].render("Welcome to ALIGNQUATTRO",
-                                                    True, COLOR_DICTIONARY["red"])
+                upper_header = self.get_font(1).render("Welcome to ALIGNQUATTRO", True, COLOR_DICTIONARY["red"])
                 upper_header_rect = upper_header.get_rect()
                 upper_header_rect.center = (1280 // 2, 50)
                 self.screen.blit(upper_header, upper_header_rect)
                 # need something for buttons here to choose next action
             elif GAME_STATES[self.game_state] == "gameplay":
-                if (not isinstance(current_player, game_logic.HumanPlayerPygame) and
-                        self.game.get_outcome() == "in progress"):
+                if (not isinstance(current_player, game_logic.HumanPlayerPygame)
+                        and self.game.get_outcome() == "in progress"):
                     col_input = current_player.make_move(self.game)
                     current_player, player_str = self.make_move(
                         self.game, current_player, player_str, col_input)
                     pygame.event.clear(pygame.MOUSEBUTTONDOWN)
                 if self.game.get_outcome() != "in progress":
-                    font = self.fonts[0]
+                    font = self.get_font(0)
                     text = font.render(f"{self.game.get_outcome()} Click anywhere to return to menu.", True,
                                        COLOR_DICTIONARY["red"], COLOR_DICTIONARY["yellow"])
                     text_rect = text.get_rect()
@@ -178,21 +173,19 @@ class AlignQuattroVisualization:
                   yel_dag: bool = True, red_h: bool = True, yel_h: bool = True) -> None:
         """Draws the main menu for AlignQuattro, where c1 and c2 are the choices for players 1 and 2."""
         self.screen.fill(COLOR_DICTIONARY["biege"])
-        middle_header = self.fonts[0].render("START", True,
-                                             COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
+        middle_header = self.get_font(0).render("START", True, COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
         middle_header_rect = middle_header.get_rect()
         middle_header_rect.center = (1280 // 2, 440)
 
-        lower_header = self.fonts[0].render("DATA", True,
-                                            COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
+        lower_header = self.get_font(0).render("DATA", True, COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
         lower_header_rect = lower_header.get_rect()
         lower_header_rect.center = (1280 // 2, 540)
 
-        player1_choice_header = self.fonts[0].render("Red Player", True, COLOR_DICTIONARY["red"])
+        player1_choice_header = self.get_font(0).render("Red Player", True, COLOR_DICTIONARY["red"])
         player1_choice_rect = player1_choice_header.get_rect()
         player1_choice_rect.center = (1280 // 2 - 280, 380)
 
-        player2_choice_header = self.fonts[0].render("Yellow Player", True, COLOR_DICTIONARY["red"])
+        player2_choice_header = self.get_font(0).render("Yellow Player", True, COLOR_DICTIONARY["red"])
         player2_choice_rect = player2_choice_header.get_rect()
         player2_choice_rect.center = (1280 // 2 + 280, 380)
 
@@ -237,7 +230,7 @@ class AlignQuattroVisualization:
             xpos = 1280 // 2 + 280
             side = "right"
 
-        choice_header = self.fonts[0].render(message, True, COLOR_DICTIONARY["yellow"])
+        choice_header = self.get_font(0).render(message, True, COLOR_DICTIONARY["yellow"])
         choice_rect = choice_header.get_rect()
         choice_rect.center = (xpos, 440)
 
@@ -287,19 +280,19 @@ class AlignQuattroVisualization:
         dag_dict = {True: "DAG", False: "Tree"}
         heuristic_dict = {True: "Heuristic", False: "No Heuristic"}
 
-        player1_choice_header = self.fonts[0].render("Red Player", True, COLOR_DICTIONARY["red"])
+        player1_choice_header = self.get_font(0).render("Red Player", True, COLOR_DICTIONARY["red"])
         player1_choice_rect = player1_choice_header.get_rect()
         player1_choice_rect.center = (1280 // 2 - 280, 380)
 
-        diff_text = self.fonts[0].render(diff_dict[diff], True, COLOR_DICTIONARY["white"])
+        diff_text = self.get_font(0).render(diff_dict[diff], True, COLOR_DICTIONARY["white"])
         diff_rect = diff_text.get_rect()
         diff_rect.center = (x_pos, 440)
 
-        dag_text = self.fonts[0].render(dag_dict[is_dag], True, COLOR_DICTIONARY["white"])
+        dag_text = self.get_font(0).render(dag_dict[is_dag], True, COLOR_DICTIONARY["white"])
         dag_rect = dag_text.get_rect()
         dag_rect.center = (x_pos, 540)
 
-        h_text = self.fonts[0].render(heuristic_dict[is_h], True, COLOR_DICTIONARY["white"])
+        h_text = self.get_font(0).render(heuristic_dict[is_h], True, COLOR_DICTIONARY["white"])
         h_rect = h_text.get_rect()
         h_rect.center = (x_pos, 640)
 
@@ -371,14 +364,19 @@ class AlignQuattroVisualization:
 
         self.screen.fill(COLOR_DICTIONARY["white"])
 
-        font = self.fonts[0]
-        text = font.render("Click anywhere to return to menu.", True,
-                           COLOR_DICTIONARY["blue"])
+        font = self.get_font(0)
+        text = font.render("Click anywhere to return to menu.", True, COLOR_DICTIONARY["blue"])
         text_rect = text.get_rect()
         text_rect.center = (1280 // 2, 720 // 2)
         self.screen.blit(text, text_rect)
 
         # display graphs etc here
+
+    def get_font(self, font_choice: int) -> pygame.font.Font:
+        """Returns a font based on a dictionary mapping integers to fonts."""
+        fonts = {0: pygame.font.Font('freesansbold.ttf', 32),
+                 1: pygame.font.Font('freesansbold.ttf', 64)}
+        return fonts[font_choice]
 
 
 if __name__ == '__main__':
