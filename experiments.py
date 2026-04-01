@@ -1,13 +1,21 @@
 """CSC111 Project 2 ALIGNQUATTRO
 
-EXPERIMENT FILE
+Experiment File
 
 This file contains experiments to measure and compare the strength of different
-AlignQuattro AI configurations. This includes:
-    - heuristics_vs_non_heuristics: measures whether the win rate advantage of heuristic rollouts over random rollouts
-    is consistent across simulation counts, by running a decreasing number of games
-    as simulations increase (30, 24, 18, 12) to account for reduced variance at higher
-    simulation counts, with alternating colours to cancel out the first-move advantage
+AlignQuattro AI model configurations. This includes:
+    - heuristics_vs_non_heuristics: measures whether the win rate advantage of
+      heuristic rollouts over random rollouts grows as the number of simulations increases,
+      by running 20 games at each simulation count with alternating colors to cancel
+      out the first-move advantage
+    - mcts_vs_baseline(): measures whether the win rate of an MCTS model with more searches against
+      a baseline MCTS model with a fixed number of searches increases, as the number of searches of 
+      the stronger model is varied. This is achieved by running 20 games at each simulation count 
+      with alternating colors to cancel out the first-move advantage
+    - run_tree_vs_dag_experiments(): measures whether the win rate advantage of the
+      DAG MCTS rollouts over Tree MCTS rollouts grows as the number of simulations increases,
+      by running 20 games at each simulation count with alternating colors to cancel
+      out the first-move advantage
 """
 import random
 import csv
