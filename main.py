@@ -79,7 +79,7 @@ def get_ai_info() -> game_logic.Player | player_mcts.MCTSPlayer:
                 sims = input("How many cycles do you want to run?: ")
             sims = int(sims)
         else:
-            sims = {'easy': 400, 'hard': 7000}.get(difficulty, 1600)
+            sims = {'easy': 400, 'hard': 10000}.get(difficulty, 1600)
         print("=" * 40)
         have_heuristics = input("Do you want heuristics? Y  |  N \n").lower().strip()
         while have_heuristics not in {"y", "n"}:
