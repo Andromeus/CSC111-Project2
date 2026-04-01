@@ -381,12 +381,12 @@ if __name__ == '__main__':
     import doctest
     doctest.testmod()
 
-    # import python_ta
-    # python_ta.check_all(config={
-    #     'max-line-length': 120,
-    #     'disable': ['static_type_checker'],
-    #     'extra-imports': ['math', 'pygame', 'game_logic']
-    # })
+    import python_ta
+    python_ta.check_all(config={
+        'max-line-length': 120,
+        'disable': ['static_type_checker'],
+        'extra-imports': ['math', 'pygame', 'game_logic', 'player_mcts']
+    })
 
     red = game_logic.HumanPlayerPygame()
     yellow = game_logic.RandomPlayer()
