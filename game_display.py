@@ -7,6 +7,8 @@ This file is for running pygame and visualizing our project.
 import math
 
 import pygame
+from mypyc.primitives.registry import custom_op
+
 import game_logic
 import player_mcts
 
@@ -96,33 +98,35 @@ class AlignQuattroVisualization:
                             self.show_data()
                         elif RECTS["left"].collidepoint(event.pos):
                             player_1_choice += 1
-                            self.change_player_types(player_1_choice, player_2_choice)
-                            if player_1_choice % 3 == 2:
-                                self.type_customization_text(True, red_dif, red_dag, red_heuristic)
+                            self.change_player_types(True, player_1_choice, red_dif, red_dag, red_heuristic)
                         elif RECTS["right"].collidepoint(event.pos):
                             player_2_choice += 1
-                            self.change_player_types(player_1_choice, player_2_choice)
-                            if player_2_choice % 3 == 2:
-                                self.type_customization_text(False, red_dif, red_dag, red_heuristic)
+                            self.change_player_types(False, player_2_choice, yel_dif, yel_dag, yel_heuristic)
                         elif RECTS["left difficulty"].collidepoint(event.pos) and player_1_choice % 3 == 2:
                             red_dif += 1
                             red_dif %= 4
+                            self.change_player_types(True, player_1_choice, red_dif, red_dag, red_heuristic)
                             self.type_customization_text(True, red_dif, red_dag, red_heuristic)
                         elif RECTS["left tree"].collidepoint(event.pos) and player_1_choice % 3 == 2:
                             red_dag = not red_dag
+                            self.change_player_types(True, player_1_choice, red_dif, red_dag, red_heuristic)
                             self.type_customization_text(True, red_dif, red_dag, red_heuristic)
                         elif RECTS["left heuristic"].collidepoint(event.pos) and player_1_choice % 3 == 2:
                             red_heuristic = not red_heuristic
+                            self.change_player_types(True, player_1_choice, red_dif, red_dag, red_heuristic)
                             self.type_customization_text(True, red_dif, red_dag, red_heuristic)
                         elif RECTS["right difficulty"].collidepoint(event.pos) and player_2_choice % 3 == 2:
                             yel_dif += 1
                             yel_dif %= 4
+                            self.change_player_types(False, player_2_choice, yel_dif, yel_dag, yel_heuristic)
                             self.type_customization_text(False, yel_dif, yel_dag, yel_heuristic)
                         elif RECTS["right tree"].collidepoint(event.pos) and player_2_choice % 3 == 2:
                             yel_dag = not yel_dag
+                            self.change_player_types(False, player_2_choice, yel_dif, yel_dag, yel_heuristic)
                             self.type_customization_text(False, yel_dif, yel_dag, yel_heuristic)
                         elif RECTS["right heuristic"].collidepoint(event.pos) and player_2_choice % 3 == 2:
                             yel_heuristic = not yel_heuristic
+                            self.change_player_types(False, player_2_choice, yel_dif, yel_dag, yel_heuristic)
                             self.type_customization_text(False, yel_dif, yel_dag, yel_heuristic)
                     elif (GAME_STATES[self.game_state] == "gameplay" and
                           isinstance(current_player, game_logic.HumanPlayerPygame) and
@@ -134,10 +138,12 @@ class AlignQuattroVisualization:
                                 self.game, current_player, player_str, c_input)
                     elif GAME_STATES[self.game_state] == "gameplay" and self.game.outcome != "in progress":
                         self.game_state = 0  # return to menu when the game is finished
-                        self.draw_menu(player_1_choice, player_2_choice)
+                        self.draw_menu(player_1_choice, player_2_choice, red_dif, yel_dif, red_dag,
+                                       yel_dag, red_heuristic, yel_heuristic)
                     elif GAME_STATES[self.game_state] == "data_visualization":
                         self.game_state = 0  # return to menu when the game is finished
-                        self.draw_menu(player_1_choice, player_2_choice)
+                        self.draw_menu(player_1_choice, player_2_choice, red_dif, yel_dif, red_dag,
+                                       yel_dag, red_heuristic, yel_heuristic)
 
             if GAME_STATES[self.game_state] == "menu":
                 upper_header = self.fonts[1].render("Welcome to ALIGNQUATTRO",
@@ -168,7 +174,8 @@ class AlignQuattroVisualization:
             self.clock.tick(60)  # limits FPS to 60
         pygame.quit()
 
-    def draw_menu(self, c1: int = 1, c2: int = 0) -> None:
+    def draw_menu(self, c1: int = 1, c2: int = 0, red_dif: int = 0, yel_dif: int = 0, red_dag: bool = True,
+                  yel_dag: bool = True, red_h: bool = True, yel_h: bool = True) -> None:
         """Draws the main menu for AlignQuattro, where c1 and c2 are the choices for players 1 and 2."""
         self.screen.fill(COLOR_DICTIONARY["biege"])
         middle_header = self.fonts[0].render("START", True,
@@ -197,7 +204,8 @@ class AlignQuattroVisualization:
                          0, 10, 10, 10, 10)
         pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["right"],
                          0, 10, 10, 10, 10)
-        self.change_player_types(c1, c2)
+        self.change_player_types(True, c1, red_dif, red_dag, red_h)
+        self.change_player_types(False, c2, yel_dif, yel_dag, yel_h)
         self.screen.blit(middle_header, middle_header_rect)
         self.screen.blit(lower_header, lower_header_rect)
         self.screen.blit(player1_choice_header, player1_choice_rect)
@@ -212,62 +220,52 @@ class AlignQuattroVisualization:
 
         pygame.display.flip()
 
-    def change_player_types(self, choice1: int, choice2: int) -> None:
+    def change_player_types(self, is_left: bool, choice: int, difficulty: int, is_dag: bool, use_h: bool) -> None:
         """
         Displays which type each player is on their buttons and modifies each player to fit the types displayed.
         The type is changed when the button is clicked
         """
         player_dict = {0: "Random", 1: "Human", 2: "MCTS Agent"}
         num_options = len(player_dict)
-        red_num_iterations, red_is_dag, red_use_heuristic = 1600, True, True
-        yel_num_iterations, yel_is_dag, yel_use_heuristic = 1600, True, True
+        message = player_dict[choice % num_options]
+        difficulty_dictionary = {0: 400, 1: 1600, 2: 20000, 3: 50000}
 
-        m1 = player_dict[choice1 % num_options]
-        m2 = player_dict[choice2 % num_options]
-
-        player1_choice_header = self.fonts[0].render(m1, True,
-                                                     COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
-        player1_choice_rect = player1_choice_header.get_rect()
-        player1_choice_rect.center = (1280 // 2 - 280, 440)
-
-        player2_choice_header = self.fonts[0].render(m2, True,
-                                                     COLOR_DICTIONARY["yellow"], COLOR_DICTIONARY["red"])
-        player2_choice_rect = player2_choice_header.get_rect()
-        player2_choice_rect.center = (1280 // 2 + 280, 440)
-        pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["left"],
-                         0, 10, 10, 10, 10)
-        pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["right"],
-                         0, 10, 10, 10, 10)
-
-        self.screen.blit(player1_choice_header, player1_choice_rect)
-        self.screen.blit(player2_choice_header, player2_choice_rect)
-
-        if choice1 % num_options == 0:
-            self.red = game_logic.RandomPlayer()
-            custom_color_left = COLOR_DICTIONARY['biege']
-        elif choice1 % num_options == 1:
-            self.red = game_logic.HumanPlayerPygame()
-            custom_color_left = COLOR_DICTIONARY['biege']
-
+        if is_left:
+            xpos = 1280 // 2 - 280
+            side = "left"
         else:
-            self.red = player_mcts.MCTSPlayer(red_num_iterations, math.sqrt(2), red_is_dag, red_use_heuristic)
-            custom_color_left = COLOR_DICTIONARY['red']
+            xpos = 1280 // 2 + 280
+            side = "right"
 
-        if choice2 % num_options == 0:
-            self.yellow = game_logic.RandomPlayer()
-            custom_color_right = COLOR_DICTIONARY['biege']
-        elif choice2 % num_options == 1:
-            self.yellow = game_logic.HumanPlayerPygame()
-            custom_color_right = COLOR_DICTIONARY['biege']
+        choice_header = self.fonts[0].render(message, True, COLOR_DICTIONARY["yellow"])
+        choice_rect = choice_header.get_rect()
+        choice_rect.center = (xpos, 440)
+
+        pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS[side], 0, 10, 10, 10, 10)
+
+        self.screen.blit(choice_header, choice_rect)
+
+        if choice % num_options == 0:
+            adjusted_player = game_logic.RandomPlayer()
+            custom_color = COLOR_DICTIONARY['biege']
+        elif choice % num_options == 1:
+            adjusted_player = game_logic.HumanPlayerPygame()
+            custom_color = COLOR_DICTIONARY['biege']
         else:
-            self.yellow = player_mcts.MCTSPlayer(yel_num_iterations, math.sqrt(2), yel_is_dag, yel_use_heuristic)
-            custom_color_right = COLOR_DICTIONARY['red']
+            adjusted_player = player_mcts.MCTSPlayer(difficulty_dictionary[difficulty], math.sqrt(2), is_dag, use_h)
+            custom_color = COLOR_DICTIONARY['red']
 
-        # Draw optional rectangles, cover if unnecessary
-        for left_rect in ["left difficulty", "left tree", "left heuristic"]:
-            pygame.draw.rect(self.screen, custom_color_left, RECTS[left_rect], 0, 10, 10, 10, 10)
-        for right_rect in ["right difficulty", "right tree", "right heuristic"]:
-            pygame.draw.rect(self.screen, custom_color_right, RECTS[right_rect], 0, 10, 10, 10, 10)
+        if is_left:
+            for left_rect in ["left difficulty", "left tree", "left heuristic"]:
+                pygame.draw.rect(self.screen, custom_color, RECTS[left_rect], 0, 10, 10, 10, 10)
+            self.red = adjusted_player
+        else:
+            for right_rect in ["right difficulty", "right tree", "right heuristic"]:
+                pygame.draw.rect(self.screen, custom_color, RECTS[right_rect], 0, 10, 10, 10, 10)
+            self.yellow = adjusted_player
+
+        if custom_color == COLOR_DICTIONARY['red']:
+            self.type_customization_text(is_left, difficulty, is_dag, use_h)
 
     def type_customization_text(self, is_left: bool, diff: int, is_dag: bool, is_h: bool) -> None:
         """Updates left / right textboxes of the MCTS Agent customization buttons based on specifications
