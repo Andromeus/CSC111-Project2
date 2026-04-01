@@ -6,22 +6,16 @@ Run this file to play a game of AlignQuattro against an MCTS Ai with difficulty 
 
 Can choose between text visualization and pygame visualization.
 """
-from sympy.series.limits import heuristics
 
 import game_logic
 import game_display
-import players
 import player_mcts
-import player_mcts_2
 
 
-def run_game_console(red: players.Player, yellow: players.Player) -> tuple[str, list[tuple[str, int, int]]]:
-    """Run a Minichess game between the two given players. Visualize with the given visualization request.
+def run_game_console(red: game_logic.Player, yellow: game_logic.Player) -> tuple[str, list[tuple[str, int, int]]]:
+    """Run a AlignQuattor game between the two given players. Visualize in the console
 
     Return the outcome: either 'red win', 'yellow win', or 'tie'.
-
-    Preconditions:
-        - visualization_type in {"none", "text", "pygame"}
     """
     game = game_logic.AlignQuattroGame()
 
@@ -45,22 +39,32 @@ def run_game_console(red: players.Player, yellow: players.Player) -> tuple[str, 
 
 def run_game_pygame() -> None:
     """
-    Opens pygame version of alignquattro
+    Run a AlignQuattro game between the two given players.
+    Initializes a AlignQuattorVisualization object, which is the pygame game of AlignQuattro
+    and starts the game on the main screen
     """
-    vis = game_display.AlignQuattroVisualization(players.HumanPlayerPygame(), players.RandomPlayer())
+    vis = game_display.AlignQuattroVisualization(game_logic.HumanPlayerPygame(), game_logic.RandomPlayer())
     vis.start_game()
 
 
-def get_ai_info() -> players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer:
-    aiChoice = input("Choose the AI type: random, MCTS, DAG \n").lower().strip()
-    while aiChoice not in {"random", "mcts", "dag"}:
+def get_ai_info() -> game_logic.Player | player_mcts.MCTSPlayer:
+    """ Get info for AI if player is an AI
+
+    Return a random AI or a MCTS AI
+
+    MCTS AI has a chosen difficulty(number of cycles), which can be one of the prechosen
+    settings: easy, medium, or hard, or with a custom amount of cycles and can be chosed to be DAG or not be DAG,
+    and with Heuristics or without
+    """
+    ai_choice = input("Choose the AI type: random, MCTS, DAG \n").lower().strip()
+    while ai_choice not in {"random", "mcts", "dag"}:
         print("invalid input")
-        aiChoice = input("Choose the AI type: random, MCTS, DAG \n").lower().strip()
+        ai_choice = input("Choose the AI type: random, MCTS, DAG \n").lower().strip()
     print("=" * 40)
-    if aiChoice == "random":
-        ai = players.RandomPlayer
+    if ai_choice == "random":
+        ai = game_logic.RandomPlayer
     else:
-        if aiChoice == "mcts":
+        if ai_choice == "mcts":
             dag = False
         else:
             dag = True
@@ -70,26 +74,33 @@ def get_ai_info() -> players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCT
             difficulty = input("Choose difficulty — easy / medium / hard / custom: ").strip().lower()
         if difficulty == "custom":
             sims = input("How many cycles do you want to run?: ")
-            while not isinstance(sims, int):
+            while not isinstance(int(sims), int):
                 print('invalid input')
                 sims = input("How many cycles do you want to run?: ")
+            sims = int(sims)
         else:
             sims = {'easy': 400, 'hard': 7000}.get(difficulty, 1600)
         print("=" * 40)
-        heuristics = input("Do you want heuristics? Y  |  N \n")
-        while heuristics.strip().lower() not in {"y", "n"}:
+        have_heuristics = input("Do you want heuristics? Y  |  N \n").lower().strip()
+        while have_heuristics not in {"y", "n"}:
             print("invalid input")
-            heuristics = input("Do you want heuristics? Y  |  N \n")
+            have_heuristics = input("Do you want heuristics? Y  |  N \n").lower().strip()
         print("=" * 40)
-        if heuristics.lower().strip() == "y":
-            ai = player_mcts_2.MCTSPlayer(num_searches=sims, is_dag=dag)
+        if have_heuristics == "y":
+            ai = player_mcts.MCTSPlayer(num_searches=sims, is_dag=dag, use_heuristics=True)
         else:
-            ai = player_mcts.MCTSPlayer(num_searches=sims, is_dag=dag)
+            ai = player_mcts.MCTSPlayer(num_searches=sims, is_dag=dag, use_heuristics=False)
     return ai
 
 
 def main() -> None:
-    """Run an interactive game of AlignQuattro against the MCTS AI."""
+    """Run an interactive game of AlignQuattro against the MCTS AI.
+
+    The player can choose to visualize the game in the console or in pygame
+
+    If player chooses console, they can select how they want to play,
+    the types of players and customize the players are they AI
+    """
     play_mode = input("Choose your visualization method: Console  |  Pygame \n")
     while play_mode.strip().lower() not in {"console", "pygame"}:
         print("Invalid Choice")
@@ -110,7 +121,7 @@ def main() -> None:
         ai2 = get_ai_info()
         outcome, _ = run_game_console(ai1, ai2)
 
-    elif gamemode == "human vs ai" or "ai vs human":
+    elif gamemode in {"human vs ai", "ai vs human"}:
         print("You are playing Human vs AI")
         print("=" * 40)
         ai = get_ai_info()
@@ -119,14 +130,14 @@ def main() -> None:
             print("invalid input")
             go_first = input("Do you want to go first? Y  |  N \n")
         if go_first == "y":
-            outcome, _ = run_game_console(players.HumanPlayer(), ai)
+            outcome, _ = run_game_console(game_logic.HumanPlayer(), ai)
             print("\nYou are RED  (R)   |   AI is YELLOW  (Y)")
         else:
-            outcome, _ = run_game_console(ai, players.HumanPlayer())
+            outcome, _ = run_game_console(ai, game_logic.HumanPlayer())
             print("\nAI is RED  (R)   |   You are YELLOW  (Y)")
     else:
         print("You are playing Human vs Human")
-        outcome, _ = run_game_console(players.HumanPlayer(), players.HumanPlayer())
+        outcome, _ = run_game_console(game_logic.HumanPlayer(), game_logic.HumanPlayer())
 
     print("Columns are numbered 1–7 left to right.\n")
 
@@ -137,28 +148,6 @@ def main() -> None:
     else:
         print("It's a tie!")
 
-
-    # # Tune num_searches for difficulty:
-    # #   200  → easy/fast   (~50ms per AI move)
-    # #   800  → medium      (~200ms per AI move)
-    # #   2000 → hard        (~500ms per AI move)
-    # difficulty = input("Choose difficulty — easy / medium / hard (default: medium): ").strip().lower()
-    #
-    #
-    # colour = input("\nDo you want to go first? (yes / no, default: yes): ").strip().lower()
-    #
-    # if colour == 'no':
-    #     print("\nAI goes first. Good luck!\n")
-    #
-    # else:
-    #     print("\nYou go first. Good luck!\n")
-    #     outcome, _ = run_game_console(human, ai, visualization_type="text")
-    #     if outcome == 'red win':
-    #         print("You win! Well done.")
-    #     elif outcome == 'yellow win':
-    #         print("AI wins! Better luck next time.")
-    #     else:
-    #         print("It's a tie!")
 
 if __name__ == '__main__':
     import doctest
@@ -176,11 +165,11 @@ if __name__ == '__main__':
         if exit == "y":
             running = False
 
-    # import python_ta
-    # python_ta.check_all(config={
-    #     'max-line-length': 120,
-    #     'disable': ['static_type_checker'],
-    #     'extra-imports': ['random', 'copy', 'game_display'],
-    #     'allowed-io': ['run_game', 'run_games', 'print_simple_visual', 'HumanPlayer.make_move']
-    #
-    # })
+    import python_ta
+    python_ta.check_all(config={
+        'max-line-length': 120,
+        'disable': ['static_type_checker'],
+        'extra-imports': ['random', 'copy', 'game_display', 'game_logic', 'players', 'player_mcts'],
+        'allowed-io': ['main', 'get_ai_info', 'run_game_console', 'run_game', 'run_games', 'print_simple_visual',
+                       'HumanPlayer.make_move']
+    })
