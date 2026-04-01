@@ -8,16 +8,13 @@ import math
 
 import pygame
 import game_logic
-import players
 import player_mcts
-import player_mcts_2
 
 COLOR_DICTIONARY = {"white": (255, 255, 255), "blue": (0, 0, 255), "red": (255, 0, 0), "yellow": (255, 255, 0),
                     "biege": (255, 192, 103)}
 GAME_STATES = {0: "menu", 1: "gameplay", 2: "data_visualization"}
-RECTS = {"lower middle": pygame.Rect(
-    540, 400, 200, 80), "lower middle 2": pygame.Rect(540, 500, 200, 80),
-    "right": pygame.Rect(820, 400, 200, 80), "left": pygame.Rect(260, 400, 200, 80)}
+RECTS = {"lower middle": pygame.Rect(540, 400, 200, 80), "lower middle 2": pygame.Rect(540, 500, 200, 80),
+         "right": pygame.Rect(820, 400, 200, 80), "left": pygame.Rect(260, 400, 200, 80)}
 
 
 class AlignQuattroVisualization:
@@ -27,8 +24,8 @@ class AlignQuattroVisualization:
         - screen: a pygame.Surface instance attribute through which the AlignQuattro game is visualized.
         - clock: a pygame.time.Clock instance attribute used for keeping track of time in pygame.
         - running: a boolean which controls the pygame game loop and keeps it running while true.
-        - red: a players.Player or player_mcts.MCTSPlayer or player_mcts_2.MCTSPlayer instance attribute representing the red player.
-        - yellow: a players.Player or player_mcts.MCTSPlayer or player_mcts_2.MCTSPlayer instance attribute representing the yellow player.
+        - red: a players.Player or player_mcts.MCTSPlayer instance attribute representing the red player.
+        - yellow: a players.Player or player_mcts.MCTSPlayer instance attribute representing the yellow player.
         - game_state: an int representing the current game_state, based on the GAME_STATES dictionary.
 
     Representation Invariants
@@ -41,15 +38,15 @@ class AlignQuattroVisualization:
     yellow: game_logic.Player | player_mcts.MCTSPlayer
     game_state: int
     game: game_logic.AlignQuattroGame
-    fonts: dict[int, pygame.font]
+    # fonts: dict[int, pygame.font]
 
     def __init__(self, red: game_logic.Player | player_mcts.MCTSPlayer,
                  yellow: game_logic.Player | player_mcts.MCTSPlayer, g_state: int = 0) -> None:
         """Initialize AlignQuattroVisualization class.
 
         Preconditions:
-            - isinstance(red, players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer)
-            - isinstance(yellow, players.Player | player_mcts.MCTSPlayer | player_mcts_2.MCTSPlayer)
+            - isinstance(red, players.Player | player_mcts.MCTSPlayer)
+            - isinstance(yellow, players.Player | player_mcts.MCTSPlayer)
         """
         pygame.init()
         self.screen = pygame.display.set_mode((1280, 720))
@@ -95,7 +92,7 @@ class AlignQuattroVisualization:
                             player_2_choice += 1
                             self.change_player_types(player_1_choice, player_2_choice)
                     elif (GAME_STATES[self.game_state] == "gameplay" and
-                          isinstance(current_player, players.HumanPlayerPygame) and
+                          isinstance(current_player, game_logic.HumanPlayerPygame) and
                           self.game.get_outcome() == "in progress"):
                         x = event.pos[0]
                         c_input = math.floor((x - 32) / 175)
@@ -117,7 +114,7 @@ class AlignQuattroVisualization:
                 self.screen.blit(upper_header, upper_header_rect)
                 # need something for buttons here to choose next action
             elif GAME_STATES[self.game_state] == "gameplay":
-                if (not isinstance(current_player, players.HumanPlayerPygame) and
+                if (not isinstance(current_player, game_logic.HumanPlayerPygame) and
                         self.game.get_outcome() == "in progress"):
                     col_input = current_player.make_move(self.game)
                     current_player, player_str = self.make_move(
@@ -159,7 +156,6 @@ class AlignQuattroVisualization:
         player2_choice_rect = player2_choice_header.get_rect()
         player2_choice_rect.center = (1280 // 2 + 280, 380)
 
-
         pygame.draw.rect(self.screen, COLOR_DICTIONARY["red"], RECTS["lower middle"],
                          0, 10, 10, 10, 10)
         pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["lower middle 2"],
@@ -188,15 +184,10 @@ class AlignQuattroVisualization:
         Displays which type each player is on their buttons and modifies each player to fit the types displayed.
         The type is changed when the button is clicked
         """
-        player_dict = {0: "Random", 1: "Human", 2: "MCTS Easy", 3: "MCTS Medium", 4: "MCTS Hard", 5: "MCTS Slooow",
-                       6: "MCTS Easy Heuristic", 7: "MCTS Medium Heuristic", 8: "MCTS Hard Heuristic",
-                       9: "MCTS Slooow Heuristic",
-                       10: "DAG Easy", 11: "DAG Medium", 12: "DAG Hard", 13: "DAG Slooow",
-                       14: "DAG Easy Heuristic", 15: "DAG Medium Heuristic", 16: "DAG Hard Heuristic",
-                       17: "DAG Slooow Heuristic"}
-        player_dict = {0: "Random", 1: "Human", 2: "Easy", 3: "Medium", 4: "Hard", 5: "Slooow", 6: "Tree",
-                       7: "No Heuristic"}
+        player_dict = {0: "Random", 1: "Human", 2: "MCTS Agent"}
         num_options = len(player_dict)
+        red_num_iterations, red_is_dag, red_use_heuristic = 1600, True, True
+        yel_num_iterations, yel_is_dag, yel_use_heuristic = 1600, True, True
 
         m1 = player_dict[choice1 % num_options]
         m2 = player_dict[choice2 % num_options]
@@ -214,22 +205,23 @@ class AlignQuattroVisualization:
                          0, 10, 10, 10, 10)
         pygame.draw.rect(self.screen, COLOR_DICTIONARY['red'], RECTS["right"],
                          0, 10, 10, 10, 10)
+
         self.screen.blit(player1_choice_header, player1_choice_rect)
         self.screen.blit(player2_choice_header, player2_choice_rect)
 
-            elif choice % 18 == 14:
-                self.red = player_mcts.MCTSPlayer(400, is_dag=True, use_heuristics=True)
-            elif choice % 18 == 15:
-                self.red = player_mcts.MCTSPlayer(is_dag=True, use_heuristics=True)
-            elif choice % 18 == 16:
-                self.red = player_mcts.MCTSPlayer(20000, is_dag=True, use_heuristics=True)
-            elif choice % 18 == 17:
-                self.red = player_mcts.MCTSPlayer(50000, is_dag=True, use_heuristics=True)
+        if choice1 % num_options == 0:
+            self.red = game_logic.RandomPlayer()
+        elif choice1 % num_options == 1:
+            self.red = game_logic.HumanPlayerPygame()
         else:
-            if choice % 18 == 0:
-                self.yellow = game_logic.RandomPlayer()
-            elif choice % 18 == 1:
+            self.red = player_mcts.MCTSPlayer(red_num_iterations, math.sqrt(2), red_is_dag, red_use_heuristic)
 
+        if choice2 % num_options == 0:
+            self.yellow = game_logic.RandomPlayer()
+        elif choice2 % num_options == 1:
+            self.yellow = game_logic.HumanPlayerPygame()
+        else:
+            self.yellow = player_mcts.MCTSPlayer(yel_num_iterations, math.sqrt(2), yel_is_dag, yel_use_heuristic)
 
     def start_new_game(self) -> None:
         """Starts a new game with the given red and yellow players, by creating a new game and switching game state."""
@@ -316,7 +308,7 @@ if __name__ == '__main__':
     #     'extra-imports': ['math', 'pygame', 'game_logic']
     # })
 
-    red = players.HumanPlayerPygame()
-    yellow = players.RandomPlayer()
+    red = game_logic.HumanPlayerPygame()
+    yellow = game_logic.RandomPlayer()
     vis = AlignQuattroVisualization(red, yellow)
     vis.start_game()
