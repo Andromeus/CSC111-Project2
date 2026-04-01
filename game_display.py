@@ -1,8 +1,21 @@
-"""CSC111 Project 2 ALIGNQUATTRO
+"""CSC111 Winter 2026 Project 2: AlignQuattro Game Display
 
-GAME DISPLAY FILE
+Instructions
+============
 
-This file is for running pygame and visualizing our project.
+This Python module contains the interactive visualization and graphical user interface code for AlignQuattro.
+It allows a human player to play against AI agents, observe games between two AI players, and display the
+current board state using Pygame.
+
+Copyright and Usage Information
+===============================
+
+This file is provided solely for the personal and private use of students
+taking CSC111 at the University of Toronto St. George campus. All forms of
+distribution of this code, whether as given or with any changes, are
+expressly prohibited.
+
+This file is Copyright (c) 2026 AlignQuattro Team
 """
 import math
 

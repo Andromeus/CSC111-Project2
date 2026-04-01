@@ -1,6 +1,7 @@
-"""CSC111 Project 2 ALIGNQUATTRO
+"""CSC111 Winter 2026 Project 2: AlignQuattro Game Logic
 
-GAME LOGIC FILE
+Instructions
+============
 
 This file contains the basic game logic for a game of AlignQuattro (aka connect4). This includes
     - An AlignQuattroGame class, containing a 6x7 board and several methods like make_move and check_win to
@@ -10,8 +11,15 @@ This file contains the basic game logic for a game of AlignQuattro (aka connect4
     move stategies
     - methods run_game and run_games
 
-"""
+Copyright and Usage Information
+===============================
 
+This file is the intellectual property of the AlignQuattro Team. It may not
+be copied, modified, distributed, or used without the permission of the
+authors.
+
+This file is Copyright (c) 2026 AlignQuattro Team
+"""
 from __future__ import annotations
 
 import random

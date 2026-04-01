@@ -1,11 +1,21 @@
-"""CSC111 Project 2 ALIGNQUATTRO
+"""CSC111 Winter 2026 Project 2: AlignQuattro DAG Representation
 
-DAG FILE
+Instructions
+============
 
 This file contains the DAG (Directed Acyclic Graph) logic for the MCTS player. This includes:
     - A _DAGNode class, representing a single node in the DAG, which stores visit count, value sum, and children
     - A _zobrist_hash function, which hashes a board state to a unique 64-bit integer
     - A _get_or_create_node function, which looks up or creates a node in the transposition table
+
+Copyright and Usage Information
+===============================
+
+This file is the intellectual property of the AlignQuattro Team. It may not
+be copied, modified, distributed, or used without the permission of the
+authors.
+
+This file is Copyright (c) 2026 AlignQuattro Team
 """
 
 from __future__ import annotations
