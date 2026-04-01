@@ -11,7 +11,7 @@ AlignQuattro AI configurations. This includes:
 """
 
 from game_logic import run_game
-from new import MCTSPlayer
+from player_mcts import MCTSPlayer
 
 
 def heuristics_vs_non_heuristics() -> None:
