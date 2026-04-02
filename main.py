@@ -1,10 +1,19 @@
-"""CSC111 Project 2 ALIGNQUATTRO
+"""CSC111 Winter 2026 Project 2: Interactive Main Program
 
-MAIN FILE
+Instructions
+===========
 
-Run this file to play a game of AlignQuattro against an MCTS Ai with difficulty of your choosing.
+Run this file to play a game of AlignQuattro against an MCTS Ai with difficulty of your choosing. You can choose
+between text visualization and pygame visualization modes.
 
-Can choose between text visualization and pygame visualization.
+Copyright and Usage Information
+===============================
+
+This file is the intellectual property of the AlignQuattro Team. It may not
+be copied, modified, distributed, or used without the permission of the
+authors.
+
+Copyright (c) 2026 AlignQuattro Team
 """
 
 import game_logic
@@ -113,12 +122,12 @@ def main() -> None:
     while play_mode.strip().lower() not in {"console", "pygame"}:
         print("Invalid Choice")
         play_mode = input("Choose how you want to play: Console  |  Pygame \n")
-    if play_mode == "pygame":
+    if play_mode.strip().lower() == "pygame":
         run_game_pygame()
     print("=" * 40)
 
-    gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n")
-    while gamemode.strip().lower() not in {"ai vs ai", "human vs ai", "ai vs human", "human vs human"}:
+    gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n").strip().lower()
+    while gamemode not in {"ai vs ai", "human vs ai", "ai vs human", "human vs human"}:
         print("Invalid choice")
         gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n")
 
@@ -160,6 +169,7 @@ def main() -> None:
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+    # If you want to check python_ta, comment out the run game lines and while loop
     running = True
     print("=" * 40)
     print("   Welcome to ALIGNQUATTRO (Connect 4)")

@@ -1,4 +1,21 @@
-"""Monte Carlo Tree Search player for Align Quattro."""
+"""CSC111 Winter 2026 Project 2: AlignQuattro MCTS Agent
+
+Instructions
+============
+
+This Python module contains the Monte Carlo Tree Search and Monte Carlo Graph Search implementation used to choose
+moves in AlignQuattro. It includes both tree and graph modes, with an optional rollout heuristics that can be toggled
+on, and helper functions used for the selection, expansion, simulation, and backpropagation steps.
+
+Copyright and Usage Information
+===============================
+
+This file is the intellectual property of the AlignQuattro Team. It may not
+be copied, modified, distributed, or used without the permission of the
+authors.
+
+This file is Copyright (c) 2026 AlignQuattro Team
+"""
 from __future__ import annotations
 import math
 import random
@@ -42,7 +59,8 @@ class MCTSPlayer(Player):
     _transposition_table: dict
     _root: Any | None
 
-    def __init__(self, num_searches: int = 1600, exploration_weight: float = math.sqrt(2), is_dag: bool = True, use_heuristics: bool = True) -> None:
+    def __init__(self, num_searches: int = 1600, exploration_weight: float = math.sqrt(2), is_dag: bool = True,
+                 use_heuristics: bool = True) -> None:
         """Initializes the MCTS player.
 
         Preconditions:
@@ -243,7 +261,8 @@ class MCTSPlayer(Player):
     def _would_win(self, game: AlignQuattroGame, col: int, as_red: bool) -> bool:
         """Return True if placing a piece in a column for the given player wins immediately.
 
-        Temporarily places a piece, checks for a win, then restores the board. (this is more efficiet than using deepcopy which takes too much time)
+        Temporarily places a piece, checks for a win, then restores the board. (this is more efficiet than using
+        deepcopy which takes too much time)
 
         Preconditions:
             - col in game.get_available_columns()
@@ -257,10 +276,12 @@ class MCTSPlayer(Player):
         board[row][col].set_piece_type(player)
 
         # Check all four directions for a win
-        won = game.check_direction_win(row, col, 'horizontal', player) or \
-              game.check_direction_win(row, col, 'vertical', player) or \
-              game.check_direction_win(row, col, 'positive diagonal', player) or \
-              game.check_direction_win(row, col, 'negative diagonal', player)
+        won = (
+            game.check_direction_win(row, col, 'horizontal', player)
+            or game.check_direction_win(row, col, 'vertical', player)
+            or game.check_direction_win(row, col, 'positive diagonal', player)
+            or game.check_direction_win(row, col, 'negative diagonal', player)
+        )
 
         # Restore the board — no copy needed
         board[row][col].set_piece_type('empty')
@@ -295,7 +316,6 @@ class MCTSPlayer(Player):
                 return col
 
         return random.choice(legal)
-
 
     def _backpropagate(self, path: list[Any], reward: float) -> None:
         """Update visit counts and value sums along the visited path.
