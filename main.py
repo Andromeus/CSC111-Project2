@@ -29,7 +29,6 @@ def run_game_console(red: game_logic.Player | player_mcts.MCTSPlayer,
     Return the outcome: as a string, either 'red win', 'yellow win', or 'tie' as well as the list of moves
     where each move is a tuple of the color, red or yellow, and the row and column.
 
-
     """
     game = game_logic.AlignQuattroGame()
 

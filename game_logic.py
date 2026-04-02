@@ -9,7 +9,7 @@ This file contains the basic game logic for a game of AlignQuattro (aka Connect 
     - A Piece class, representing a single piece in an AlignQuattro game, which can be red, yellow, or empty
     - A Player abstract class with the abstract method make_move, and subclasses meant to implement different
     move stategries
-    - methods run_game and run_games
+    - methods run_game
 
 Copyright and Usage Information
 ===============================
@@ -332,10 +332,11 @@ class Piece:
 ################################################################################
 
 
-def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> tuple[str, list[tuple[str, int, int]]]:
-    """Run a Minichess game between the two given players. Visualize with the given visualization request.
+def run_game(red: Player, yellow: Player) -> tuple[str, list[tuple[str, int, int]]]:
+    """Run a AlignQuattro game between the two given players, Red is player 1 and yellow is player 2.
 
-    Return the outcome: either 'red win', 'yellow win', or 'tie'.
+    Return the outcome: as a string, either 'red win', 'yellow win', or 'tie' as well as the list of moves
+    where each move is a tuple of the color, red or yellow, and the row and column.
 
     Preconditions:
         - visualization_type in {"none", "text"}
@@ -346,8 +347,6 @@ def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> t
     current_player = red
 
     while game.get_outcome() == "in progress":
-        if visualization_type == "text":
-            print_simple_visual(game.get_board())
         col_input = current_player.make_move(game)
         row_input = game.get_row_from_available_columns(col_input)
         game.make_move(col_input)
@@ -447,6 +446,6 @@ if __name__ == '__main__':
         'max-line-length': 120,
         'disable': ['static_type_checker'],
         'extra-imports': ['random', 'copy', 'game_display'],
-        'allowed-io': ['run_game', 'run_games', 'print_simple_visual', 'HumanPlayer.make_move']
+        'allowed-io': ['run_game', 'print_simple_visual', 'HumanPlayer.make_move']
 
     })
