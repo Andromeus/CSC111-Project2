@@ -38,12 +38,16 @@ def mcts_vs_baseline() -> None:
 
     The baseline player always uses 200 (or 500) searches for the MCTS, while the search count of the tested player
     iterates over baseline_model_search_counts. For each simulation count, games are alternated by colour so that the
-    tested player can play both sides. The results are written to experiments_against_baseline.csv.
+    tested player can play both sides. The results are written to experiments_against_baseline_200_searches.csv and
+    experiments_against_baseline_500_searches.csv, by changing the number of baseline model searches.
     """
     baseline_model_search_counts = [100, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400]
+    # The below is a short experiment (<1 min) configuration
+    # baseline_model_search_counts = [200, 400, 1000]
     random.seed(42)
-    # Baseline model is the weak MCTS player with only 200 searches
+    # Baseline model is the weak MCTS player with only 200 (or 500) searches
     baseline_model_search_count = 200
+    # baseline_model_search_count = 500
     num_games = 20
 
     with open('experiments_against_baseline.csv', 'w', newline='') as csv_file:
