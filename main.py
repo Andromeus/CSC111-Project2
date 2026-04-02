@@ -3,7 +3,7 @@
 Instructions
 ===========
 
-Run this file to play a game of AlignQuattro against an MCTS Ai with difficulty of your choosing. You can choose
+Run this file to play a game of AlignQuattro against an MCTS AI with difficulty of your choosing. You can choose
 between text visualization and pygame visualization modes.
 
 Copyright and Usage Information
@@ -23,7 +23,7 @@ import player_mcts
 
 def run_game_console(red: game_logic.Player | player_mcts.MCTSPlayer,
                      yellow: game_logic.Player | player_mcts.MCTSPlayer) -> tuple[str, list[tuple[str, int, int]]]:
-    """Run a AlignQuattor game between the two given players, Red is player 1 and yellow is player 2.
+    """Run a AlignQuattro game between the two given players, Red is player 1 and yellow is player 2.
     Visualize in the console.
 
     Return the outcome: as a string, either 'red win', 'yellow win', or 'tie' as well as the list of moves
@@ -53,8 +53,7 @@ def run_game_console(red: game_logic.Player | player_mcts.MCTSPlayer,
 
 
 def run_game_pygame() -> None:
-    """
-    Run a pygame visualization AlignQuattro game between two given players.
+    """Run a pygame visualization AlignQuattro game between two given players.
     Initializes a AlignQuattroVisualization object, starting red player as human player
     and yellow player as random AI.
     """
@@ -65,10 +64,10 @@ def run_game_pygame() -> None:
 def get_ai_info() -> game_logic.Player | player_mcts.MCTSPlayer:
     """ Get info for AI if player is an AI
 
-    Return a random AI or a MCTS AI
+    Return whether the player is a random AI or an MCTS AI.
 
     MCTS AI has a chosen difficulty(number of cycles), which can be one of the prechosen
-    settings: easy, medium, or hard, or with a custom amount of cycles and can be chosed to be DAG or not be DAG,
+    settings: easy, medium, or hard, or with a custom amount of cycles and can be chosen to be DAG or not be DAG,
     and with Heuristics or without
     """
     ai_choice = input("Choose the AI type: random, MCTS, DAG \n").lower().strip()
@@ -118,7 +117,7 @@ def main() -> None:
     The player can choose to visualize the game in the console or in pygame
 
     If player chooses console, they can select how they want to play,
-    the types of players and customize the players are they AI.
+    the types of players and customize if they want the players to be AI.
 
     Red is player 1 and Yellow is player 2.
     """
