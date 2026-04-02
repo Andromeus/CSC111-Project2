@@ -3,12 +3,12 @@
 Instructions
 ============
 
-This file contains the basic game logic for a game of AlignQuattro (aka connect4). This includes
+This file contains the basic game logic for a game of AlignQuattro (aka Connect Four). This includes
     - An AlignQuattroGame class, containing a 6x7 board and several methods like make_move and check_win to
     help run a game of AlignQuattro
     - A Piece class, representing a single piece in an AlignQuattro game, which can be red, yellow, or empty
     - A Player abstract class with the abstract method make_move, and subclasses meant to implement different
-    move stategies
+    move stategries
     - methods run_game and run_games
 
 Copyright and Usage Information
@@ -43,9 +43,6 @@ class AlignQuattroGame:
         - len(self._board) == 6 and len(self._board[0]) == 7
         - all([x in self._valid_moves for x in range(0, 7)])
         - all([-1 <= self._valid_moves[y] <= 5 for y in range(0,7)])
-
-    ***DOCTESTS HERE EVENTUALLY***
-
     """
     outcome: str
     _board: list[list[Piece]]
@@ -384,7 +381,7 @@ class RandomPlayer(Player):
 
 
 class HumanPlayer(Player):
-    """An AlignQuattro player which take real human input to make human decided moves each turn."""
+    """An AlignQuattro player which take in real human input to make human decided moves each turn."""
 
     def make_move(self, game: AlignQuattroGame) -> int:
         """Waits for human player to type a number 1 - 7 to select a column."""
@@ -403,6 +400,7 @@ class HumanPlayerPygame(Player):
     """
     def make_move(self, game: AlignQuattroGame) -> None:
         """Allow the pygame game loop to make moves instead of making a move directly."""
+        pass
 
 
 if __name__ == '__main__':
