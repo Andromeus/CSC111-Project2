@@ -330,6 +330,25 @@ class Piece:
         self._piece_type = set_type
 
 
+def print_simple_visual(board: list[list[Piece]]) -> None:
+    """Prints out a visualization of a board, with Os Rs and Ys for empty, red, and yellow."""
+    visual = "ALIGNQUATTRO BOARD: \n"
+    for r in range(0, 6):
+        for c in range(0, 7):
+            if board[r][c].get_piece_type() == "empty":
+                piece = "O "
+            elif board[r][c].get_piece_type() == "red":
+                piece = "R "
+            else:
+                piece = "Y "
+            visual += piece
+        visual += "\n"
+    print(visual)
+
+################################################################################
+# Basic PLayer Classes
+################################################################################
+
 class Player:
     """An abstract class representing an AlignQuattro AI.
 
@@ -384,26 +403,6 @@ class HumanPlayerPygame(Player):
     """
     def make_move(self, game: AlignQuattroGame) -> None:
         """Allow the pygame game loop to make moves instead of making a move directly."""
-
-################################################################################
-# Functions for running games
-################################################################################
-
-
-def print_simple_visual(board: list[list[Piece]]) -> None:
-    """Prints out a visualization of a board, with Os Rs and Ys for empty, red, and yellow."""
-    visual = "ALIGNQUATTRO BOARD: \n"
-    for r in range(0, 6):
-        for c in range(0, 7):
-            if board[r][c].get_piece_type() == "empty":
-                piece = "O "
-            elif board[r][c].get_piece_type() == "red":
-                piece = "R "
-            else:
-                piece = "Y "
-            visual += piece
-        visual += "\n"
-    print(visual)
 
 
 if __name__ == '__main__':

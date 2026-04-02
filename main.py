@@ -88,11 +88,12 @@ def get_ai_info() -> game_logic.Player | player_mcts.MCTSPlayer:
             print('invalid input')
             difficulty = input("Choose difficulty — easy / medium / hard / custom: ").strip().lower()
         if difficulty == "custom":
-            sims = input("How many cycles do you want to run?: ")
-            while not isinstance(int(sims), int):
-                print('invalid input')
-                sims = input("How many cycles do you want to run?: ")
-            sims = int(sims)
+            while True:
+                try:
+                    sims = int(input("How many cycles do you want to run?: "))
+                    break
+                except ValueError:
+                    print("invalid input")
         else:
             sims = {'easy': 400, 'hard': 10000}.get(difficulty, 1600)
         print("=" * 40)
