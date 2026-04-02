@@ -127,6 +127,7 @@ def main() -> None:
         play_mode = input("Choose how you want to play: Console  |  Pygame \n").lower().strip()
     if play_mode == "pygame":
         run_game_pygame()
+        return
     print("=" * 40)
 
     gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n").lower().strip()
