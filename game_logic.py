@@ -327,6 +327,41 @@ class Piece:
         self._piece_type = set_type
 
 
+################################################################################
+# Functions to run games
+################################################################################
+
+
+def run_game(red: Player, yellow: Player, visualization_type: str = "none") -> tuple[str, list[tuple[str, int, int]]]:
+    """Run a Minichess game between the two given players. Visualize with the given visualization request.
+
+    Return the outcome: either 'red win', 'yellow win', or 'tie'.
+
+    Preconditions:
+        - visualization_type in {"none", "text"}
+    """
+    game = AlignQuattroGame()
+
+    move_sequence = []
+    current_player = red
+
+    while game.get_outcome() == "in progress":
+        if visualization_type == "text":
+            print_simple_visual(game.get_board())
+        col_input = current_player.make_move(game)
+        row_input = game.get_row_from_available_columns(col_input)
+        game.make_move(col_input)
+        if current_player is red:
+            current_player = yellow
+            player_str = "red"
+        else:
+            current_player = red
+            player_str = "yellow"
+        move_sequence.append((player_str, row_input, col_input))
+        # can pass row_input, col_input to pygame here
+    return game.get_outcome(), move_sequence
+
+
 def print_simple_visual(board: list[list[Piece]]) -> None:
     """Prints out a visualization of a board, with Os Rs and Ys for empty, red, and yellow."""
     visual = "ALIGNQUATTRO BOARD: \n"
