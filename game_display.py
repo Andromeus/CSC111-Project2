@@ -5,6 +5,7 @@ GAME DISPLAY FILE
 This file is for running pygame and visualizing our project.
 """
 import math
+import sys
 
 import pygame
 
@@ -168,6 +169,7 @@ class AlignQuattroVisualization:
             pygame.display.flip()
             self.clock.tick(60)  # limits FPS to 60
         pygame.quit()
+        sys.exit()
 
     def draw_menu(self, c1: int = 1, c2: int = 0, red_dif: int = 0, yel_dif: int = 0, red_dag: bool = True,
                   yel_dag: bool = True, red_h: bool = True, yel_h: bool = True) -> None:
@@ -365,12 +367,31 @@ class AlignQuattroVisualization:
         self.screen.fill(COLOR_DICTIONARY["white"])
 
         font = self.get_font(0)
+        title_font = self.get_font(1)
+        header = title_font.render("Data Visualizations", True, COLOR_DICTIONARY["blue"])
         text = font.render("Click anywhere to return to menu.", True, COLOR_DICTIONARY["blue"])
-        text_rect = text.get_rect()
-        text_rect.center = (1280 // 2, 720 // 2)
-        self.screen.blit(text, text_rect)
 
-        # display graphs etc here
+        header_rect = header.get_rect()
+        header_rect.center = (350, 100)
+
+        text_rect = text.get_rect()
+        text_rect.center = (350, 150)
+
+        vs_baseline = pygame.image.load('images/experiments_against_baseline.jpg')
+        vs_baseline = pygame.transform.scale(vs_baseline, (600, 350))
+
+        tree_vs_dag = pygame.image.load('images/experiments_tree_vs_dag.jpg')
+        tree_vs_dag = pygame.transform.scale(tree_vs_dag, (600, 350))
+
+        heuristics_vs_not = pygame.image.load('images/Heuristics_vs_Non_Heuristics_Win_Rate.jpg')
+        heuristics_vs_not = pygame.transform.scale(heuristics_vs_not, (600, 350))
+
+        self.screen.blit(vs_baseline, (680, 0))
+        self.screen.blit(tree_vs_dag, (0, 350))
+        self.screen.blit(heuristics_vs_not, (680, 350))
+
+        self.screen.blit(header, header_rect)
+        self.screen.blit(text, text_rect)
 
     def get_font(self, font_choice: int) -> pygame.font.Font:
         """Returns a font based on a dictionary mapping integers to fonts."""

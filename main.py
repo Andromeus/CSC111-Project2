@@ -12,10 +12,15 @@ import game_display
 import player_mcts
 
 
-def run_game_console(red: game_logic.Player, yellow: game_logic.Player) -> tuple[str, list[tuple[str, int, int]]]:
-    """Run a AlignQuattor game between the two given players. Visualize in the console
+def run_game_console(red: game_logic.Player | player_mcts.MCTSPlayer,
+                     yellow: game_logic.Player | player_mcts.MCTSPlayer) -> tuple[str, list[tuple[str, int, int]]]:
+    """Run a AlignQuattor game between the two given players, Red is player 1 and yellow is player 2.
+    Visualize in the console.
 
-    Return the outcome: either 'red win', 'yellow win', or 'tie'.
+    Return the outcome: as a string, either 'red win', 'yellow win', or 'tie' as well as the list of moves
+    where each move is a tuple of the color, red or yellow, and the row and column.
+
+
     """
     game = game_logic.AlignQuattroGame()
 
@@ -34,14 +39,15 @@ def run_game_console(red: game_logic.Player, yellow: game_logic.Player) -> tuple
             player_str = "yellow"
         move_sequence.append((player_str, row_input, col_input))
         # can pass row_input, col_input to pygame here
+    game_logic.print_simple_visual(game.get_board())
     return game.get_outcome(), move_sequence
 
 
 def run_game_pygame() -> None:
     """
-    Run a AlignQuattro game between the two given players.
-    Initializes a AlignQuattorVisualization object, which is the pygame game of AlignQuattro
-    and starts the game on the main screen
+    Run a pygame visualization AlignQuattro game between two given players.
+    Initializes a AlignQuattroVisualization object, starting red player as human player
+    and yellow player as random AI.
     """
     vis = game_display.AlignQuattroVisualization(game_logic.HumanPlayerPygame(), game_logic.RandomPlayer())
     vis.start_game()
@@ -62,7 +68,7 @@ def get_ai_info() -> game_logic.Player | player_mcts.MCTSPlayer:
         ai_choice = input("Choose the AI type: random, MCTS, DAG \n").lower().strip()
     print("=" * 40)
     if ai_choice == "random":
-        ai = game_logic.RandomPlayer
+        ai = game_logic.RandomPlayer()
     else:
         if ai_choice == "mcts":
             dag = False
@@ -99,7 +105,9 @@ def main() -> None:
     The player can choose to visualize the game in the console or in pygame
 
     If player chooses console, they can select how they want to play,
-    the types of players and customize the players are they AI
+    the types of players and customize the players are they AI.
+
+    Red is player 1 and Yellow is player 2.
     """
     play_mode = input("Choose your visualization method: Console  |  Pygame \n")
     while play_mode.strip().lower() not in {"console", "pygame"}:
