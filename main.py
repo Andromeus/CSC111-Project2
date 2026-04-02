@@ -91,7 +91,10 @@ def get_ai_info() -> game_logic.Player | player_mcts.MCTSPlayer:
             while True:
                 try:
                     sims = int(input("How many cycles do you want to run?: "))
-                    break
+                    if sims > 0:
+                        break
+                    else:
+                        print("invalid input")
                 except ValueError:
                     print("invalid input")
         else:
