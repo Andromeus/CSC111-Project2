@@ -8,7 +8,7 @@ This file contains the basic game logic for a game of AlignQuattro (aka Connect 
     help run a game of AlignQuattro
     - A Piece class, representing a single piece in an AlignQuattro game, which can be red, yellow, or empty
     - A Player abstract class with the abstract method make_move, and subclasses meant to implement different
-    move stategries
+    move strategies
     - method run_game
 
 Copyright and Usage Information
@@ -52,11 +52,11 @@ class AlignQuattroGame:
     def __init__(self, board: list[list[Piece]] = None,
                  is_red_move: bool = True, game_outcome: str = 'in progress') -> None:
         """Initializes AlignQuattroGame"""
+        self._valid_moves = {}
         if board is not None:
             self._board = board
         else:
             self._board = []
-            self._valid_moves = {}
             for i in range(0, 6):
                 self._board.append([])
                 self._valid_moves[i] = 5
@@ -113,7 +113,7 @@ class AlignQuattroGame:
         Checks for wins by searching through four possible win conditions:
         1. Vertical
         2. Horizontal
-        3. Postive Diagonal
+        3. Positive Diagonal
         4. Negative Diagonal
 
         Preconditions:
