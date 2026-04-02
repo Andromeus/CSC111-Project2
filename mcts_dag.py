@@ -4,9 +4,9 @@ Instructions
 ============
 
 This file contains the DAG (Directed Acyclic Graph) logic for the MCTS player. This includes:
-    - A _DAGNode class, representing a single node in the DAG, which stores visit count, value sum, and children
-    - A _zobrist_hash function, which hashes a board state to a unique 64-bit integer
-    - A _get_or_create_node function, which looks up or creates a node in the transposition table
+    - A DAGNode class, representing a single node in the DAG, which stores visit count, value sum, and children
+    - A zobrist_hash function, which hashes a board state to a unique 64-bit integer
+    - A get_or_create_node function, which looks up or creates a node in the transposition table
 
 Copyright and Usage Information
 ===============================
@@ -44,7 +44,7 @@ _ZOBRIST_TABLE: list[list[list[int]]] = [
 
 
 def zobrist_hash(game: game_logic.AlignQuattroGame) -> int:
-    """Return a 64-bit integer uniquely identifying the board state of the given game.
+    """Return a 64-bit integer (computationally) uniquely identifying the board state of the given game.
 
     Uses Zobrist hashing: each (row, col, piece_type) triple has a pre-assigned
     random number. The board hash is the XOR of all matching triples.
