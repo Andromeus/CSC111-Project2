@@ -83,10 +83,10 @@ def get_ai_info() -> game_logic.Player | player_mcts.MCTSPlayer:
             dag = False
         else:
             dag = True
-        difficulty = input("Choose difficulty — easy / medium / hard / custom: ").strip().lower()
+        difficulty = input("Choose difficulty — easy / medium / hard / custom: ").lower().strip()
         while difficulty not in {"easy", "medium", "hard", "custom"}:
             print('invalid input')
-            difficulty = input("Choose difficulty — easy / medium / hard / custom: ").strip().lower()
+            difficulty = input("Choose difficulty — easy / medium / hard / custom: ").lower().strip()
         if difficulty == "custom":
             while True:
                 try:
@@ -119,18 +119,18 @@ def main() -> None:
 
     Red is player 1 and Yellow is player 2.
     """
-    play_mode = input("Choose your visualization method: Console  |  Pygame \n")
-    while play_mode.strip().lower() not in {"console", "pygame"}:
+    play_mode = input("Choose your visualization method: Console  |  Pygame \n").lower().strip()
+    while play_mode not in {"console", "pygame"}:
         print("Invalid Choice")
-        play_mode = input("Choose how you want to play: Console  |  Pygame \n")
-    if play_mode.strip().lower() == "pygame":
+        play_mode = input("Choose how you want to play: Console  |  Pygame \n").lower().strip()
+    if play_mode == "pygame":
         run_game_pygame()
     print("=" * 40)
 
-    gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n").strip().lower()
+    gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n").lower().strip()
     while gamemode not in {"ai vs ai", "human vs ai", "ai vs human", "human vs human"}:
         print("Invalid choice")
-        gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n")
+        gamemode = input("Choose how you want to play: AI vs AI  |  Human vs AI  |  Human vs Human \n").lower().strip()
 
     if gamemode == "ai vs ai":
         print("You are playing AI vs AI")
@@ -142,10 +142,10 @@ def main() -> None:
     elif gamemode in {"human vs ai", "ai vs human"}:
         print("You are playing Human vs AI")
         print("=" * 40)
-        go_first = input("Do you want to go first? Y  |  N \n")
-        while go_first.lower().strip() not in {"y", "n"}:
+        go_first = input("Do you want to go first? Y  |  N \n").lower().strip()
+        while go_first not in {"y", "n"}:
             print("invalid input")
-            go_first = input("Do you want to go first? Y  |  N \n")
+            go_first = input("Do you want to go first? Y  |  N \n").lower().strip()
         ai = get_ai_info()
         if go_first == "y":
             outcome, _ = run_game_console(game_logic.HumanPlayer(), ai)
@@ -177,10 +177,10 @@ if __name__ == '__main__':
     print("=" * 40)
     while running:
         main()
-        exit = input("Do you want to quit: Y  |  N \n")
-        while exit.lower().strip() not in {"y", "n"}:
+        exit = input("Do you want to quit: Y  |  N \n").lower().strip()
+        while exit not in {"y", "n"}:
             print("invalid input")
-            exit = input("Do you want to quit: Y  |  N \n")
+            exit = input("Do you want to quit: Y  |  N \n").lower().strip()
         if exit == "y":
             running = False
 
